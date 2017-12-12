@@ -60,5 +60,5 @@ typings/
 # Vagrant
 .vagrant/
 
-# Secrets
-secrets/
+# Private stuff
+private/
