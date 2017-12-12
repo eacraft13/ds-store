@@ -16,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/eacraft13/ds-store/issues"
   },
-  "homepage": "https://github.com/eacraft13/ds-store#readme"
+  "homepage": "https://github.com/eacraft13/ds-store#readme",
+  "dependencies": {
+    "express": "^4.16.2",
+    "rethinkdb": "^2.3.3",
+    "thinky": "^2.3.9"
+  }
 }
