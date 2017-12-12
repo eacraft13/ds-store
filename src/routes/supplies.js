@@ -1,7 +1,8 @@
 'use strict';
 
 var express = require('express'),
-    router = express.Router;
+    router = express.Router();
+var Supply = require('../models/supply');
 
 /**
  * @index

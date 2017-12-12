@@ -1,6 +1,6 @@
 'use strict';
 
-var conf     = require('./conf/app');
+var conf     = require('./config/app');
 var express  = require('express'),
     app      = express();
 var leads    = require('./routes/leads');
