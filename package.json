@@ -20,6 +20,7 @@
   "dependencies": {
     "express": "^4.16.2",
     "joi": "^13.0.2",
+    "lodash": "^4.17.4",
     "res-error": "^0.3.1",
     "rethinkdb": "^2.3.3",
     "rethinkdbdash": "^2.3.31"
