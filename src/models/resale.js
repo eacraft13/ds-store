@@ -52,37 +52,10 @@ Resale.createOrUpdate = function (resale) {
     if (validation.error)
         return Promise.reject(new Error(validation.error));
 
-    return Resale
-        .getOne(resale.eBayId)
-        .then(function (result) {
-            if (result)
-                return Resale._create(resale);
-            else
-                return Resale._update(resale);
-        });
-};
-
-Resale._create = function (resale) {
     return new Promise(function (resolve, reject) {
         r
         .table(table)
-        .insert(resale)
-        .run()
-        .then(function (result) {
-            return resolve(result);
-        })
-        .error(function (err) {
-            return reject(new Error(err));
-        });
-    });
-};
-
-Resale._update = function (resale) {
-    return new Promise(function (resolve, reject) {
-        r
-        .table(table)
-        .get(resale.eBayId)
-        .update(resale)
+        .insert(validation.value, { conflict: 'update' })
         .run()
         .then(function (result) {
             return resolve(result);
