@@ -8,55 +8,65 @@ var Supply = require('../models/supply');
  * @index
  */
 router.get('/', function (req, res) {
-    return Supply
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Supply.getAll()
+        .then(function (supplies) {
+            return res.json(supplies);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @create
  */
 router.post('/', function (req, res) {
-    return new Supply(req.body)
-        .save()
-        .then(res.json)
-        .error(res.error);
+    return Supply.createOrUpdate(req.body)
+        .then(function (result) {
+            return res.json(result);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @show
  */
 router.get('/:id', function (req, res) {
-    return Supply
-        .get(req.params.id)
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Supply.getOne(req.params.id)
+        .then(function (supply) {
+            return res.json(supply);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @update
  */
 router.patch('/:id', function (req, res) {
-    return Supply
-        .get(req.params.id)
-        .update(req.body)
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Supply.createOrUpdate(req.body)
+        .then(function (result) {
+            return res.json(result);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * destroy
  */
 router.delete('/:id', function (req, res) {
-    return Supply
-        .get(req.params.id)
-        .delete()
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Supply.destroy(req.params.id)
+        .then(function (result) {
+            return res.json(result);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 module.exports = router;

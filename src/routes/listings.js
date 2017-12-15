@@ -8,55 +8,65 @@ var Listing = require('../models/listing');
  * @index
  */
 router.get('/', function (req, res) {
-    return Listing
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Listing.getAll()
+        .then(function (listings) {
+            return res.json(listings);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @create
  */
 router.post('/', function (req, res) {
-    return new Listing(req.body)
-        .save()
-        .then(res.json)
-        .error(res.error);
+    return Listing.createOrUpdate(req.body)
+        .then(function (result) {
+            return res.json(result);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @show
  */
 router.get('/:id', function (req, res) {
-    return Listing
-        .get(req.params.id)
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Listing.getOne(req.params.id)
+        .then(function (listing) {
+            return res.json(listing);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @update
  */
 router.patch('/:id', function (req, res) {
-    return Listing
-        .get(req.params.id)
-        .update(req.body)
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Listing.createOrUpdate(req.body)
+        .then(function (result) {
+            return res.json(result);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * destroy
  */
 router.delete('/:id', function (req, res) {
-    return Listing
-        .get(req.params.id)
-        .delete()
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Listing.destroy(req.params.id)
+        .then(function (result) {
+            return res.json(result);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 module.exports = router;

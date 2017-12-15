@@ -8,55 +8,65 @@ var Resale = require('../models/resale');
  * @index
  */
 router.get('/', function (req, res) {
-    return Resale
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Resale.getAll()
+        .then(function (resales) {
+            return res.json(resales);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @create
  */
 router.post('/', function (req, res) {
-    return new Resale(req.body)
-        .save()
-        .then(res.json)
-        .error(res.error);
+    return Resale.createOrUpdate(req.body)
+        .then(function (result) {
+            return res.json(result);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @show
  */
 router.get('/:id', function (req, res) {
-    return Resale
-        .get(req.params.id)
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Resale.getOne(req.params.id)
+        .then(function (resale) {
+            return res.json(resale);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @update
  */
 router.patch('/:id', function (req, res) {
-    return Resale
-        .get(req.params.id)
-        .update(req.body)
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Resale.createOrUpdate(req.body)
+        .then(function (result) {
+            return res.json(result);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * destroy
  */
 router.delete('/:id', function (req, res) {
-    return Resale
-        .get(req.params.id)
-        .delete()
-        .run()
-        .then(res.json)
-        .error(res.error);
+    return Resale.destroy(req.params.id)
+        .then(function (result) {
+            return res.json(result);
+        })
+        .error(function (err) {
+            return res.error(err);
+        });
 });
 
 module.exports = router;

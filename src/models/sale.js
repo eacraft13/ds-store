@@ -1,12 +1,42 @@
 'use strict';
 
-var thinky = require('../thinky'),
-    type = thinky.type;
+var r = require('../r');
+var schema;
+var Joi = require('joi');
 var Sale;
+var Resale = require('./resale');
 
-Sale = thinky.createModel('Sale', {
-    resaleId: type.string(),
-    // ...
+schema = Joi.object().keys({
+    createdAt: Joi.date().timestamp('unix').default(r.now()),
+    resaleId: Joi.string().required()
 });
 
-module.exports = Sale;
+/**
+ * Create (or update)
+ */
+Sale.createOrUpdate = function (sale) {
+
+};
+
+/**
+ * Get one (by id)
+ */
+Sale.getOne = function (id) {
+
+};
+
+/**
+ * Get all (by query)
+ */
+Sale.getAll = function (query) {
+
+};
+
+/**
+ * Destroy (by id)
+ */
+Sale.destroy = function (id) {
+
+};
+
+module.exports = Lead;

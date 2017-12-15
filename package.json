@@ -19,8 +19,9 @@
   "homepage": "https://github.com/eacraft13/ds-store#readme",
   "dependencies": {
     "express": "^4.16.2",
+    "joi": "^13.0.2",
     "res-error": "^0.3.1",
     "rethinkdb": "^2.3.3",
-    "thinky": "^2.3.9"
+    "rethinkdbdash": "^2.3.31"
   }
 }
