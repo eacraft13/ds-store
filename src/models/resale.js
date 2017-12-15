@@ -2,6 +2,7 @@
 
 var r = require('../r');
 var schema;
+var table = 'resale';
 var Joi = require('joi');
 var Resale;
 
@@ -11,7 +12,7 @@ schema = Joi.object().keys({
         start: Joi.date(),
         end: Joi.date(),
     })),
-    eBayId: Joi.string().required(),
+    eBayId: Joi.string().required(), // primary key
     images: Joi.array().items(Joi.string()),
     link: Joi.string(),
     price: Joi.number().min(0),
@@ -36,7 +37,7 @@ schema = Joi.object().keys({
         snipeId: Joi.string()
     })),
     sold: Joi.number().min(0),
-    supplies: Joi.array().items(Joi.string()),
+    supplies: Joi.array().items(Joi.string()), // list of foreign keys
     tax: Joi.number().min(0),
     visits: Joi.number().min(0),
     watchers: Joi.number().min(0),
@@ -46,28 +47,108 @@ schema = Joi.object().keys({
  * Create (or update)
  */
 Resale.createOrUpdate = function (resale) {
+    var validation = Joi.validate(resale, schema);
 
+    if (validation.error)
+        return Promise.reject(new Error(validation.error));
+
+    return Resale
+        .getOne(resale.eBayId)
+        .then(function (result) {
+            if (result)
+                return Resale._create(resale);
+            else
+                return Resale._update(resale);
+        });
+};
+
+Resale._create = function (resale) {
+    return new Promise(function (resolve, reject) {
+        r
+        .table(table)
+        .insert(resale)
+        .run()
+        .then(function (result) {
+            return resolve(result);
+        })
+        .error(function (err) {
+            return reject(new Error(err));
+        });
+    });
+};
+
+Resale._update = function (resale) {
+    return new Promise(function (resolve, reject) {
+        r
+        .table(table)
+        .get(resale.eBayId)
+        .update(resale)
+        .run()
+        .then(function (result) {
+            return resolve(result);
+        })
+        .error(function (err) {
+            return reject(new Error(err));
+        });
+    });
 };
 
 /**
  * Get one (by id)
  */
 Resale.getOne = function (id) {
-
+    return new Promise(function (resolve, reject) {
+        r
+        .table(table)
+        .get(id)
+        .run()
+        .then(function (resale) {
+            return resolve(resale);
+        })
+        .error(function (err) {
+            return reject(new Error(err));
+        });
+    });
 };
 
 /**
  * Get all (by query)
  */
 Resale.getAll = function (query) {
-
+    return new Promise(function (resolve, reject) {
+        r
+        .table(table)
+        .filter(query)
+        .run()
+        .then(function (cursor) {
+            return cursor.toArray();
+        })
+        .then(function (resales) {
+            return resolve(resales);
+        })
+        .error(function (err) {
+            return reject(new Error(err));
+        });
+    });
 };
 
 /**
  * Destroy (by id)
  */
 Resale.destroy = function (id) {
-
+    return new Promise(function (resolve, reject) {
+        r
+        .table(table)
+        .get(id)
+        .delete()
+        .run()
+        .then(function (result) {
+            return resolve(result);
+        })
+        .error(function (err) {
+            return reject(new Error(err));
+        });
+    });
 };
 
 module.exports = Resale;
