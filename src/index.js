@@ -1,6 +1,7 @@
 'use strict';
 
 var config   = require('./config/app');
+var cors     = require('cors');
 var express  = require('express'),
     app      = express();
 var leads    = require('./routes/leads');
@@ -10,6 +11,7 @@ var resales  = require('./routes/resales');
 var sales    = require('./routes/sales');
 var supplies = require('./routes/supplies');
 
+app.use(cors());
 app.use(express.json());
 app.use(morgan('tiny'));
 app.use(require('res-error'));

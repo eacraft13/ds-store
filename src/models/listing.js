@@ -67,11 +67,14 @@ Listing.getOne = function (id) {
 /**
  * Get all (by query)
  */
-Listing.getAll = function (query) {
+Listing.getAll = function (filters) {
     return new Promise(function (resolve, reject) {
-        r
-        .table(table)
-        .filter(query || null)
+        var query = r.table(table);
+
+        if (filters)
+            query.filter(filters);
+
+        query
         .run()
         .then(function (cursor) {
             return cursor.toArray();
