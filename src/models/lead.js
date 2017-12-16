@@ -15,28 +15,35 @@ schema = Joi.object().keys({
 /**
  * Create (or update)
  */
-Lead.createOrUpdate = function (lead) {
-    var validation = Joi.validate({ resaleId: lead.eBayId }, schema);
+Lead.createOrUpdate = function (resale) {
+    return Resale
+        .createOrUpdate(resale)
+        .then(function () {
+            return new Promise(function (resolve, reject) {
+                var lead;
 
-    if (validation.error)
-        return Promise.reject(new Error(validation.error));
+                Joi.validate({ resaleId: resale.eBayId }, schema, function (err, value) {
+                    if (err)
+                        return reject(new Error(err));
+                    lead = value;
+                });
 
-    Resale
-    .createOrUpdate(lead)
-    .then(function () {
-        return new Promise(function (resolve, reject) {
-            r
-            .table(table)
-            .insert(validation.value)
-            .run()
-            .then(function (result) {
-                return resolve(result);
-            })
-            .error(function (err) {
-                return reject(new Error(err));
+                r
+                .table(table)
+                .insert(lead, {
+                    conflict: function (id, oldDoc, newDoc) {
+                        return oldDoc;
+                    }
+                })
+                .run()
+                .then(function (result) {
+                    return resolve(result);
+                })
+                .error(function (err) {
+                    return reject(new Error(err));
+                });
             });
         });
-    });
 };
 
 /**

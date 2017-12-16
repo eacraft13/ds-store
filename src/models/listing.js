@@ -30,7 +30,11 @@ Listing.createOrUpdate = function (resale) {
 
                 r
                 .table(table)
-                .insert(listing)
+                .insert(listing, {
+                    conflict: function (id, oldDoc, newDoc) {
+                        return oldDoc;
+                    }
+                })
                 .run()
                 .then(function (result) {
                     return resolve(result);
