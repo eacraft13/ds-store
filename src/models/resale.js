@@ -4,11 +4,11 @@ var r = require('../r');
 var schema;
 var table = 'resale';
 var Joi = require('joi');
-var Resale;
+var Resale = {};
 
 schema = Joi.object().keys({
-    createdAt: Joi.date().default(r.now()),
-    dateListed: Joi.array().item(Joi.object().keys({
+    createdAt: Joi.date().default(r.now(), 'created at date'),
+    dateListed: Joi.array().items(Joi.object().keys({
         start: Joi.date(),
         end: Joi.date(),
     })),

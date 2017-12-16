@@ -3,10 +3,10 @@
 var r = require('../r');
 var schema;
 var Joi = require('joi');
-var Supply;
+var Supply = {};
 
 schema = Joi.object().keys({
-    createdAt: Joi.date().timestamp('unix').default(r.now()),
+    createdAt: Joi.date().timestamp('unix').default(r.now(), 'created at date'),
     isAvailable: Joi.boolean(),
     rank: Joi.object(), // todo - make this better
     shipping: Joi.object().keys({
@@ -20,7 +20,7 @@ schema = Joi.object().keys({
         source: Joi.string(),
         id: Joi.string()
     }),
-    tax: Joi.number().min()
+    tax: Joi.number().min(0)
 });
 
 /**

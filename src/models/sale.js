@@ -3,11 +3,11 @@
 var r = require('../r');
 var schema;
 var Joi = require('joi');
-var Sale;
+var Sale = {};
 var Resale = require('./resale');
 
 schema = Joi.object().keys({
-    createdAt: Joi.date().timestamp('unix').default(r.now()),
+    createdAt: Joi.date().timestamp('unix').default(r.now(), 'created at date'),
     resaleId: Joi.string().required()
 });
 
@@ -39,4 +39,4 @@ Sale.destroy = function (id) {
 
 };
 
-module.exports = Lead;
+module.exports = Sale;
