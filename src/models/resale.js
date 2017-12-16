@@ -7,7 +7,7 @@ var Joi = require('joi');
 var Resale = {};
 
 schema = Joi.object().keys({
-    createdAt: Joi.date().default(r.now(), 'created at date'),
+    createdAt: Joi.date().timestamp('unix').default(Date.now(), 'created at date'),
     dateListed: Joi.array().items(Joi.object().keys({
         start: Joi.date(),
         end: Joi.date(),
@@ -16,46 +16,49 @@ schema = Joi.object().keys({
     images: Joi.array().items(Joi.string()),
     link: Joi.string(),
     price: Joi.number().min(0),
-    quantity: Joi.number().min(0),
+    quantity: Joi.number().min(0).default(0),
     title: Joi.string(),
     rank: Joi.object().keys({
-        product: Joi.number(),
-        title: Joi.number(),
+        product: Joi.number().allow(null),
+        title: Joi.number().allow(null),
+        topRated: Joi.boolean().allow(null)
     }),
     shipping: Joi.object().keys({
-        cost: Joi.number().min(0),
+        cost: Joi.number().min(0).default(0),
         estimatedDelivery: Joi.object().keys({
-            max: Joi.number().min(0),
-            min: Joi.number().min(0),
+            max: Joi.number().min(0).default(0),
+            min: Joi.number().min(0).default(0),
         }),
         handlingTime: Joi.number().min(0),
         isGlobal: Joi.boolean(),
-        service: Joi.string(),
+        service: Joi.string().allow(null),
     }),
     snipes: Joi.array().items(Joi.object().keys({
         active: Joi.boolean(),
         snipeId: Joi.string()
     })),
-    sold: Joi.number().min(0),
+    sold: Joi.number().min(0).allow(null),
+    state: Joi.string(),
     supplies: Joi.array().items(Joi.string()), // list of foreign keys
-    tax: Joi.number().min(0),
-    visits: Joi.number().min(0),
-    watchers: Joi.number().min(0),
+    tax: Joi.number().min(0).allow(null),
+    visits: Joi.number().min(0).allow(null),
+    watchers: Joi.number().min(0).allow(null),
 });
 
 /**
  * Create (or update)
  */
 Resale.createOrUpdate = function (resale) {
-    var validation = Joi.validate(resale, schema);
-
-    if (validation.error)
-        return Promise.reject(new Error(validation.error));
-
     return new Promise(function (resolve, reject) {
+        Joi.validate(resale, schema, function (err, value) {
+            if (err)
+                return reject(new Error(err));
+            resale = value;
+        });
+
         r
         .table(table)
-        .insert(validation.value, { conflict: 'update' })
+        .insert(resale, { conflict: 'update' })
         .run()
         .then(function (result) {
             return resolve(result);
@@ -91,7 +94,7 @@ Resale.getAll = function (query) {
     return new Promise(function (resolve, reject) {
         r
         .table(table)
-        .filter(query)
+        .filter(query || null)
         .run()
         .then(function (cursor) {
             return cursor.toArray();

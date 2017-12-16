@@ -7,14 +7,14 @@ var Sale = {};
 var Resale = require('./resale');
 
 schema = Joi.object().keys({
-    createdAt: Joi.date().timestamp('unix').default(r.now(), 'created at date'),
+    createdAt: Joi.date().timestamp('unix').default(Date.now(), 'created at date'),
     resaleId: Joi.string().required()
 });
 
 /**
  * Create (or update)
  */
-Sale.createOrUpdate = function (sale) {
+Sale.createOrUpdate = function (resale) {
 
 };
 

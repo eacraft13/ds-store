@@ -12,7 +12,7 @@ router.get('/', function (req, res) {
         .then(function (resales) {
             return res.json(resales);
         })
-        .error(function (err) {
+        .catch(function (err) {
             return res.error(err);
         });
 });
@@ -25,7 +25,7 @@ router.post('/', function (req, res) {
         .then(function (result) {
             return res.json(result);
         })
-        .error(function (err) {
+        .catch(function (err) {
             return res.error(err);
         });
 });
@@ -38,7 +38,7 @@ router.get('/:id', function (req, res) {
         .then(function (resale) {
             return res.json(resale);
         })
-        .error(function (err) {
+        .catch(function (err) {
             return res.error(err);
         });
 });
@@ -51,7 +51,7 @@ router.patch('/:id', function (req, res) {
         .then(function (result) {
             return res.json(result);
         })
-        .error(function (err) {
+        .catch(function (err) {
             return res.error(err);
         });
 });
@@ -64,7 +64,7 @@ router.delete('/:id', function (req, res) {
         .then(function (result) {
             return res.json(result);
         })
-        .error(function (err) {
+        .catch(function (err) {
             return res.error(err);
         });
 });

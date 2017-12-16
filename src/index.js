@@ -5,11 +5,13 @@ var express  = require('express'),
     app      = express();
 var leads    = require('./routes/leads');
 var listings = require('./routes/listings');
+var morgan   = require('morgan');
 var resales  = require('./routes/resales');
 var sales    = require('./routes/sales');
 var supplies = require('./routes/supplies');
 
 app.use(express.json());
+app.use(morgan('tiny'));
 app.use(require('res-error'));
 
 app.use('/leads', leads);

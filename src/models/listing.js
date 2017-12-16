@@ -8,35 +8,38 @@ var Listing = {};
 var Resale = require('./resale');
 
 schema = Joi.object().keys({
-    createdAt: Joi.date().timestamp('unix').default(r.now(), 'created at date'),
+    createdAt: Joi.date().timestamp('unix').default(Date.now(), 'created at date'),
     resaleId: Joi.string().required()
 });
 
 /**
  * Create (or update)
  */
-Listing.createOrUpdate = function (listing) {
-    var validation = Joi.validate({ resaleId: listing.eBayId }, schema);
+Listing.createOrUpdate = function (resale) {
+    return Resale
+        .createOrUpdate(resale)
+        .then(function () {
+            return new Promise(function (resolve, reject) {
+                var listing;
 
-    if (validation.error)
-        return Promise.reject(new Error(validation.error));
+                Joi.validate({ resaleId: resale.eBayId }, schema, function (err, value) {
+                    if (err)
+                        return reject(new Error(err));
+                    listing = value;
+                });
 
-    Resale
-    .createOrUpdate(validation.value)
-    .then(function () {
-        return new Promise(function (resolve, reject) {
-            r
-            .table(table)
-            .insert(validation.value)
-            .run()
-            .then(function (result) {
-                return resolve(result);
-            })
-            .error(function (err) {
-                return reject(new Error(err));
+                r
+                .table(table)
+                .insert(listing)
+                .run()
+                .then(function (result) {
+                    return resolve(result);
+                })
+                .error(function (err) {
+                    return reject(new Error(err));
+                });
             });
         });
-    });
 };
 
 /**
@@ -64,7 +67,7 @@ Listing.getAll = function (query) {
     return new Promise(function (resolve, reject) {
         r
         .table(table)
-        .filter(query)
+        .filter(query || null)
         .run()
         .then(function (cursor) {
             return cursor.toArray();

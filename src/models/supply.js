@@ -6,7 +6,7 @@ var Joi = require('joi');
 var Supply = {};
 
 schema = Joi.object().keys({
-    createdAt: Joi.date().timestamp('unix').default(r.now(), 'created at date'),
+    createdAt: Joi.date().timestamp('unix').default(Date.now(), 'created at date'),
     isAvailable: Joi.boolean(),
     rank: Joi.object(), // todo - make this better
     shipping: Joi.object().keys({

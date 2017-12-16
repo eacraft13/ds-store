@@ -5,7 +5,7 @@ var config = require('./config/db'),
         cursor: true,
         db: config.db,
         host: config.host,
-        pool: false,
+        pool: true,
         port: config.port
     });
 

@@ -8,7 +8,7 @@ var Lead = {};
 var Resale = require('./resale');
 
 schema = Joi.object().keys({
-    createdAt: Joi.date().timestamp('unix').default(r.now(), 'created at date'),
+    createdAt: Joi.date().timestamp('unix').default(Date.now(), 'created at date'),
     resaleId: Joi.string().required()
 });
 
@@ -22,7 +22,7 @@ Lead.createOrUpdate = function (lead) {
         return Promise.reject(new Error(validation.error));
 
     Resale
-    .createOrUpdate(validation.value)
+    .createOrUpdate(lead)
     .then(function () {
         return new Promise(function (resolve, reject) {
             r
@@ -64,7 +64,7 @@ Lead.getAll = function (query) {
     return new Promise(function (resolve, reject) {
         r
         .table(table)
-        .filter(query)
+        .filter(query || null)
         .run()
         .then(function (cursor) {
             return cursor.toArray();
