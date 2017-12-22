@@ -40,7 +40,7 @@ schema = Joi.object().keys({
     sold: Joi.number().min(0).allow(null),
     state: Joi.string(),
     supplies: Joi.array().items(Joi.string()), // list of foreign keys
-    tax: Joi.number().min(0).allow(null),
+    tax: Joi.number().min(0).default(0),
     visits: Joi.number().min(0).allow(null),
     watchers: Joi.number().min(0).allow(null),
 });
