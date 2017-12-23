@@ -1,5 +1,6 @@
 'use strict';
 
+var _ = require('lodash');
 var r = require('../r');
 var schema;
 var table = 'resale';
@@ -29,6 +30,7 @@ schema = Joi.object().keys({
             max: Joi.number().min(0).default(0),
             min: Joi.number().min(0).default(0),
         }),
+        excludes: Joi.array().items(Joi.string()).allow(null),
         handlingTime: Joi.number().min(0),
         isGlobal: Joi.boolean(),
         service: Joi.string().allow(null),
@@ -50,15 +52,14 @@ schema = Joi.object().keys({
  */
 Resale.createOrUpdate = function (resale) {
     return new Promise(function (resolve, reject) {
-        Joi.validate(resale, schema, function (err, value) {
-            if (err)
-                return reject(new Error(err));
-            resale = value;
-        });
+        var joi = Joi.validate(resale, schema);
+
+        if (joi.error)
+            return reject(new Error(joi.error));
 
         r
         .table(table)
-        .insert(resale, { conflict: 'update' })
+        .insert(joi.value, { conflict: 'update' })
         .run()
         .then(function (result) {
             return resolve(result);
