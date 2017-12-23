@@ -13,7 +13,7 @@ var supplies = require('./routes/supplies');
 
 app.use(cors());
 app.use(express.json());
-app.use(morgan('[:date[clf]] :method :url :status :res[content-length] - :response-time ms'));
+app.use(morgan('(:date[clf]) [:method]:url :status (:res[content-length] kbs - :response-time ms)'));
 app.use(require('res-error'));
 
 app.use('/leads', leads);

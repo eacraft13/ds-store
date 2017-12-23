@@ -20,17 +20,14 @@ Listing.createOrUpdate = function (resale) {
         .createOrUpdate(resale)
         .then(function () {
             return new Promise(function (resolve, reject) {
-                var listing;
+                var joi = Joi.validate({ resaleId: resale.eBayId }, schema);
 
-                Joi.validate({ resaleId: resale.eBayId }, schema, function (err, value) {
-                    if (err)
-                        return reject(new Error(err));
-                    listing = value;
-                });
+                if (joi.error)
+                    return reject(new Error(joi.error));
 
                 r
                 .table(table)
-                .insert(listing, {
+                .insert(joi.value, {
                     conflict: function (id, oldDoc, newDoc) {
                         return oldDoc;
                     }
