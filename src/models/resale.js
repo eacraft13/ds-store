@@ -21,7 +21,7 @@ schema = Joi.object().keys({
     rank: Joi.object().keys({
         product: Joi.number().allow(null),
         title: Joi.number().allow(null),
-        topRated: Joi.boolean().allow(null)
+        isTopRated: Joi.boolean().allow(null)
     }),
     shipping: Joi.object().keys({
         cost: Joi.number().min(0).default(0),
