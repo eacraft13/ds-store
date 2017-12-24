@@ -1,6 +1,5 @@
 'use strict';
 
-var _ = require('lodash');
 var r = require('../r');
 var schema;
 var table = 'resale';
@@ -43,6 +42,7 @@ schema = Joi.object().keys({
     state: Joi.string(),
     supplies: Joi.array().items(Joi.string()), // list of foreign keys
     tax: Joi.number().min(0).default(0),
+    updatedAt: Joi.date().timestamp('unix').default(Date.now(), 'updated at date'),
     visits: Joi.number().min(0).allow(null),
     watchers: Joi.number().min(0).allow(null),
 });
@@ -59,7 +59,11 @@ Resale.createOrUpdate = function (resale) {
 
         r
         .table(table)
-        .insert(joi.value, { conflict: 'update' })
+        .insert(joi.value, {
+            conflict: function (id, oldDoc, newDoc) {
+                return oldDoc.merge(newDoc, { updatedAt: Date.now() });
+            }
+        })
         .run()
         .then(function (result) {
             return resolve(result);

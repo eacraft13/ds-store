@@ -9,7 +9,8 @@ var Resale = require('./resale');
 
 schema = Joi.object().keys({
     createdAt: Joi.date().timestamp('unix').default(Date.now(), 'created at date'),
-    resaleId: Joi.string().required()
+    resaleId: Joi.string().required(),
+    updatedAt: Joi.date().timestamp('unix').default(Date.now(), 'updated at date'),
 });
 
 /**
@@ -18,7 +19,10 @@ schema = Joi.object().keys({
 Lead.createOrUpdate = function (resale) {
     return Resale
         .createOrUpdate(resale)
-        .then(function () {
+        .then(function (result) {
+            if (result.errors > 0)
+                return Promise.resolve(result);
+
             return new Promise(function (resolve, reject) {
                 var lead;
 
@@ -32,7 +36,7 @@ Lead.createOrUpdate = function (resale) {
                 .table(table)
                 .insert(lead, {
                     conflict: function (id, oldDoc, newDoc) {
-                        return oldDoc;
+                        return oldDoc.merge(newDoc, { updatedAt: Date.now() });
                     }
                 })
                 .run()
