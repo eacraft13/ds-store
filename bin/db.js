@@ -16,11 +16,10 @@ schemas = [
     },
     {
         name: 'resale',
-        primaryKey: 'eBayId'
+        primaryKey: 'id'
     },
     {
         name: 'sale',
-        primaryKey: 'resaleId'
     },
     {
         name: 'supply'

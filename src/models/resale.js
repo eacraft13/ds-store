@@ -12,7 +12,8 @@ schema = Joi.object().keys({
         start: Joi.date(),
         end: Joi.date(),
     })),
-    eBayId: Joi.string().required(), // primary key
+    eBayId: Joi.string().required(),
+    id: Joi.string().required(), // primary key (multi: eBayId-hash(variationSpecifics))
     images: Joi.array().items(Joi.string()),
     link: Joi.string(),
     price: Joi.number().min(0),
@@ -42,7 +43,9 @@ schema = Joi.object().keys({
     state: Joi.string(),
     supplies: Joi.array().items(Joi.string()), // list of foreign keys
     tax: Joi.number().min(0).default(0),
+    thumb: Joi.string(),
     updatedAt: Joi.date().timestamp('unix').default(Date.now(), 'updated at date'),
+    variationSpecifics: Joi.object().allow(null),
     visits: Joi.number().min(0).allow(null),
     watchers: Joi.number().min(0).allow(null),
 });

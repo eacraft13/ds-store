@@ -24,7 +24,7 @@ Listing.createOrUpdate = function (resale) {
                 return Promise.resolve(result);
 
             return new Promise(function (resolve, reject) {
-                var joi = Joi.validate({ resaleId: resale.eBayId }, schema);
+                var joi = Joi.validate({ resaleId: resale.id }, schema);
 
                 if (joi.error)
                     return reject(new Error(joi.error));
