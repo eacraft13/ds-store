@@ -1,17 +1,22 @@
-'use strict';
-
 /**
  * Listings are products that were once or currently listed (i.e. active or inactive) on eBay store
  */
 
-var r = require('../r');
-var hash = require('object-hash');
-var schema;
-var table = 'listing';
-var Joi = require('joi');
+'use strict';
+
+var Joi     = require('joi');
 var Listing = {};
 var Promise = require('bluebird');
+var _       = require('lodash');
+var ebay    = require('ebay-dev-api')(require('../../private/ebay'));
+var hash    = require('object-hash');
+var r       = require('../r');
+var schema;
+var table   = 'listing';
 
+/**
+ * Listing schema
+ */
 schema = Joi.object().keys({
     id: Joi.string().required(),
 
@@ -20,11 +25,11 @@ schema = Joi.object().keys({
         shopping: Joi.object().required(),
     }),
 
-    snipes: Joi.array().items(Joi.string()), // [snipe_id]
-    supplies: Joi.array().items(Joi.string()), // [supply_id]
+    snipes: Joi.array().items(Joi.string()).default([]), // [snipe_id]
+    supplies: Joi.array().items(Joi.string()).default([]), // [supply_id]
 
-    createdAt: Joi.date().timestamp('unix').default(Date.now(), 'created at date'),
-    updatedAt: Joi.date().timestamp('unix').default(Date.now(), 'updated at date'),
+    createdAt: Joi.date().timestamp('unix').default(Date.now, 'time of creation'),
+    updatedAt: Joi.date().timestamp('unix').default(Date.now, 'time of update'),
 });
 
 /**
@@ -81,13 +86,80 @@ Listing.destroy = function (id) {
 /**
  * Create (or update)
  */
-Listing.createOrUpdate = function (eBayId, variationSpecifics) {
+Listing.createOrUpdate = function (listing) {
+    var joi = Joi.validate(listing, schema);
+
+    if (joi.error)
+        Promise.reject(new Error(joi.error));
+
+    return r
+        .table(table)
+        .insert(joi.value, {
+            conflict: function (id, oldDoc, newDoc) {
+                return oldDoc.merge(newDoc, { updatedAt: Date.now() });
+            }
+        })
+        .run();
 };
 
 /**
  * Sync all
  */
 Listing.sync = function () {
+    var self = this;
+
+    return ebay
+        .finding
+        .findItemsIneBayStores({ storeName: ebay.storeName })
+        .then(function (listings) {
+            var ids = _(listings[0].item)
+                .map(function (listing) {
+                    return listing.itemId[0];
+                })
+                .uniq()
+                .valueOf();
+
+            return ebay
+                .shopping
+                .getMultipleItems(ids)
+                .then(function (items) {
+                    return _.map(listings[0].item, function (listing) {
+                        var item = _.find(items, { ItemID: listing.itemId[0] });
+
+                        return {
+                            ebay: {
+                                finding: listing,
+                                shopping: item
+                            }
+                        };
+                    });
+                });
+        })
+        .then(function (listings) {
+            return _.uniqBy(listings, function (listing) {
+                return listing.ebay.shopping.ItemID;
+            });
+        })
+        .then(function (listings) {
+            return _(listings)
+                .map(function (listing) {
+                    var variations = ebay.shopping.explodeVariations(listing.ebay.shopping);
+
+                    return _.map(variations, function (variation) {
+                        return _.assign({}, listing, { ebay: { shopping: variation } });
+                    });
+                })
+                .flatten()
+                .valueOf();
+        })
+        .then(function (listings) {
+            return Promise
+                .all(
+                    _.map(listings, function (listing) {
+                        return self.createOrUpdate(listing);
+                    })
+                );
+        });
 
 };
 
