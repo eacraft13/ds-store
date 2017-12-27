@@ -12,7 +12,7 @@ var ebay    = require('ebay-dev-api')(require('../../private/ebay'));
 var hash    = require('object-hash');
 var r       = require('../r');
 var schema;
-var table   = 'listing';
+var table   = 'listings';
 
 /**
  * Listing schema
@@ -20,7 +20,7 @@ var table   = 'listing';
 schema = Joi.object().keys({
     id: Joi.string().required(),
 
-    eBay: Joi.object().keys({
+    ebay: Joi.object().keys({
         finding: Joi.object().allow(null),
         shopping: Joi.object().required(),
     }),
@@ -35,15 +35,15 @@ schema = Joi.object().keys({
 /**
  * Generates id
  */
-Listing.generateId = function (itemId, variation) {
+Listing.generateId = function (shopping) {
     var variationHash;
 
-    if (variation)
-        variationHash = hash.MD5(variation);
+    if (shopping.Variations)
+        variationHash = hash.MD5(shopping.Variations.Variation.VariationSpecifics.NameValueList);
     else
         variationHash = 0;
 
-    return `${itemId}-${variationHash}`;
+    return `${shopping.ItemID}-${variationHash}`;
 };
 
 /**
@@ -80,6 +80,7 @@ Listing.getAll = function (filters) {
         .then(function (cursor) {
             return cursor.toArray();
         });
+        //todo - join snipes and supplies
 };
 
 /**
@@ -107,7 +108,10 @@ Listing.destroy = function (id) {
  * Create (or update)
  */
 Listing.createOrUpdate = function (listing) {
-    var joi = Joi.validate(listing, schema);
+    var joi;
+
+    listing.id = this.generateId(listing.ebay.shopping);
+    joi = Joi.validate(listing, schema);
 
     if (joi.error)
         Promise.reject(new Error(joi.error));
@@ -161,7 +165,11 @@ Listing.sync = function () {
                     var variations = ebay.shopping.explodeVariations(listing.ebay.shopping);
 
                     return _.map(variations, function (variation) {
-                        return _.assign({}, listing, { ebay: { shopping: variation } });
+                        var clone = _.cloneDeep(listing);
+
+                        clone.ebay.shopping = variation;
+
+                        return clone;
                     });
                 })
                 .flatten()

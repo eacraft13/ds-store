@@ -1,30 +1,72 @@
 'use strict';
 
-var express = require('express'),
-    router = express.Router();
 var Listing = require('../models/Listing');
-var Snipe = require('../models/Snipe');
-var Supply = require('../models/Supply');
+var Snipe   = require('../models/Snipe');
+var Supply  = require('../models/Supply');
+var _       = require('lodash');
+var express = require('express'),
+    router  = express.Router();
 
 /**
  * @index
  */
 router.get('/', function (req, res) {
-    return res.status(200).json();
+    return Listing
+        .getAll()
+        .then(function (listings) {
+            return res.json(listings);
+        })
+        .catch(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @createOrUpdate
  */
 router.post('/', function (req, res) {
-    return res.status(201).json();
+    return Listing
+        .createOrUpdate(req.body)
+        .then(function (result) {
+            if (result.errors > 0)
+                return res.error(400, result.first_error);
+
+            if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0)
+                return res.status(201).json(result);
+
+            return res.error(501, result);
+        })
+        .catch(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @sync
  */
 router.put('/sync', function (req, res) {
-    return res.status(201).json();
+    return Listing
+        .sync()
+        .then(function (results) {
+            var errors = _.filter(results, function (result) {
+                return result.errors > 0;
+            });
+
+            if (errors.length > 0)
+                return res.error(400, errors.join(';'));
+
+            if (
+                _.every(results, function (result) {
+                    return result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0;
+                })
+            )
+                return res.status(201).json(results);
+
+            return res.error(501, results);
+        })
+        .catch(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
