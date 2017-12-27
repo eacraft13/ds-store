@@ -9,7 +9,6 @@ var Listing = {};
 var Promise = require('bluebird');
 var _       = require('lodash');
 var ebay    = require('ebay-dev-api')(require('../../private/ebay'));
-var hash    = require('object-hash');
 var r       = require('../r');
 var schema;
 var table   = 'listings';
@@ -33,40 +32,6 @@ schema = Joi.object().keys({
 });
 
 /**
- * Generates id
- */
-Listing.generateId = function (shopping) {
-    var variationHash;
-
-    if (shopping.Variations)
-        variationHash = hash.MD5(shopping.Variations.Variation.VariationSpecifics.NameValueList);
-    else
-        variationHash = 0;
-
-    return `${shopping.ItemID}-${variationHash}`;
-};
-
-/**
- * Explodes id
- */
-Listing.explodeId = function (id) {
-    var itemId, variation, variationHash;
-
-    itemId = id.split('-')[0];
-    variationHash = id.split('-')[1];
-
-    if (variationHash === 0)
-        variation = null;
-    else
-        variation = variationHash; //todo unhash this
-
-    return {
-        itemId: itemId,
-        variation: variation
-    };
-};
-
-/**
  * Get all
  */
 Listing.getAll = function (filters) {
@@ -88,6 +53,7 @@ Listing.get = function (id) {
         .table(table)
         .get(id)
         .run();
+        // todo - join snipes and supplies
 };
 
 /**
@@ -107,7 +73,7 @@ Listing.destroy = function (id) {
 Listing.createOrUpdate = function (listing) {
     var joi;
 
-    listing.id = this.generateId(listing.ebay.shopping);
+    listing.id = ebay.shopping.generateId(listing.ebay.shopping);
     joi = Joi.validate(listing, schema);
 
     if (joi.error)
@@ -187,20 +153,20 @@ Listing.sync = function () {
  * Refresh (by id)
  */
 Listing.refresh = function (id) {
-    var explodedId = this.explodeId(id);
+    var explodedId = ebay.shopping.explodeId(id);
     var self = this;
 
     return ebay
         .finding
         .findItemsIneBayStores({ storeName: ebay.storeName })
         .then(function (listings) {
-            var listing = _.find(listings, function (l) {
+            var listing = _.find(listings[0].item, function (l) {
                 return l.itemId[0] === explodedId.itemId;
             });
 
             return ebay
                 .shopping
-                .getMultipleItems([listing.itemId[0]])
+                .getMultipleItems([explodedId.itemId])
                 .then(function (items) {
                     return {
                         ebay: {
@@ -211,9 +177,11 @@ Listing.refresh = function (id) {
                 });
         })
         .then(function (listing) {
-            var variation = ebay.shopping.getVariation(listing.ebay.shopping, explodedId.variation);
+            var variation = ebay.shopping.getVariation(listing.ebay.shopping, explodedId.variationHash);
 
-            return _.assign({}, listing, { ebay: { shopping: variation } });
+            listing.ebay.shopping = variation;
+
+            return listing;
         })
         .then(function (listing) {
             return self.createOrUpdate(listing);

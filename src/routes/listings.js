@@ -53,7 +53,9 @@ router.put('/sync', function (req, res) {
             });
 
             if (errors.length > 0)
-                return res.error(400, errors.join(';'));
+                return res.error(400, _.map(results, function (result) {
+                    return result.first_error;
+                }).join(';'));
 
             if (
                 _.every(results, function (result) {
@@ -87,14 +89,34 @@ router.get('/:listing_id', function (req, res) {
  * @destroy
  */
 router.delete('/:listing_id', function (req, res) {
-    return res.status(202).json();
+    return Listing
+        .destroy(req.params.listing_id)
+        .then(function (result) {
+            return res.status(202).json(result);
+        })
+        .catch(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
  * @refresh
  */
 router.put('/:listing_id/refresh', function (req, res) {
-    return res.status(202).json();
+    return Listing
+        .refresh(req.params.listing_id)
+        .then(function (result) {
+            if (result.errors > 0)
+                return res.error(400, result.first_error);
+
+            if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0)
+                return res.status(201).json(result);
+
+            return res.error(501, result);
+        })
+        .catch(function (err) {
+            return res.error(err);
+        });
 });
 
 /**

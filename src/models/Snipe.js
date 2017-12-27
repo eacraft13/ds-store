@@ -5,7 +5,6 @@
  */
 
 var r = require('../r');
-var hash = require('object-hash');
 var schema;
 var table = 'snipes';
 var Joi = require('joi');
