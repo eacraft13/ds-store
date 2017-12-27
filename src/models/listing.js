@@ -35,15 +35,35 @@ schema = Joi.object().keys({
 /**
  * Generates id
  */
-Listing.generateId = function (eBayId, variationSpecifics) {
-    var id;
+Listing.generateId = function (itemId, variation) {
+    var variationHash;
 
-    if (variationSpecifics)
-        id = hash.MD5(variationSpecifics);
+    if (variation)
+        variationHash = hash.MD5(variation);
     else
-        id = 0;
+        variationHash = 0;
 
-    return `${eBayId}-${id}`;
+    return `${itemId}-${variationHash}`;
+};
+
+/**
+ * Explodes id
+ */
+Listing.explodeId = function (id) {
+    var itemId, variation, variationHash;
+
+    itemId = id.split('-')[0];
+    variationHash = id.split('-')[1];
+
+    if (variationHash === 0)
+        variation = null;
+    else
+        variation = variationHash; //todo unhash this
+
+    return {
+        itemId: itemId,
+        variation: variation
+    };
 };
 
 /**
@@ -123,8 +143,8 @@ Listing.sync = function () {
                 .shopping
                 .getMultipleItems(ids)
                 .then(function (items) {
-                    return _.map(listings[0].item, function (listing) {
-                        var item = _.find(items, { ItemID: listing.itemId[0] });
+                    return _.map(items, function (item) {
+                        var listing = _.find(listings[0].item, { itemId: [item.ItemID] });
 
                         return {
                             ebay: {
@@ -134,11 +154,6 @@ Listing.sync = function () {
                         };
                     });
                 });
-        })
-        .then(function (listings) {
-            return _.uniqBy(listings, function (listing) {
-                return listing.ebay.shopping.ItemID;
-            });
         })
         .then(function (listings) {
             return _(listings)
@@ -167,7 +182,37 @@ Listing.sync = function () {
  * Refresh (by id)
  */
 Listing.refresh = function (id) {
+    var explodedId = this.explodeId(id);
+    var self = this;
 
+    return ebay
+        .finding
+        .findItemsIneBayStores({ storeName: ebay.storeName })
+        .then(function (listings) {
+            var listing = _.find(listings, function (l) {
+                return l.itemId[0] === explodedId.itemId;
+            });
+
+            return ebay
+                .shopping
+                .getMultipleItems([listing.itemId[0]])
+                .then(function (items) {
+                    return {
+                        ebay: {
+                            finding: listing,
+                            shopping: items[0]
+                        }
+                    };
+                });
+        })
+        .then(function (listing) {
+            var variation = ebay.shopping.getVariation(listing.ebay.shopping, explodedId.variation);
+
+            return _.assign({}, listing, { ebay: { shopping: variation } });
+        })
+        .then(function (listing) {
+            return self.createOrUpdate(listing);
+        });
 };
 
 /**
