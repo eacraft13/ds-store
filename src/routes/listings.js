@@ -73,7 +73,14 @@ router.put('/sync', function (req, res) {
  * @show
  */
 router.get('/:listing_id', function (req, res) {
-    return res.status(200).json();
+    return Listing
+        .get(req.params.listing_id)
+        .then(function (listing) {
+            return res.json(listing);
+        })
+        .catch(function (err) {
+            return res.error(err);
+        });
 });
 
 /**

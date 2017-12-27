@@ -3,7 +3,7 @@
 var config = require('./config/db'),
     r = require('rethinkdbdash')({
         buffer: 2,
-        cursor: true,
+        cursor: false,
         db: config.db,
         host: config.host,
         max: 5,

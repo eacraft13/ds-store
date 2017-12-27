@@ -76,10 +76,7 @@ Listing.getAll = function (filters) {
         query.filter(filters);
 
     return query
-        .run()
-        .then(function (cursor) {
-            return cursor.toArray();
-        });
+        .run();
         //todo - join snipes and supplies
 };
 
