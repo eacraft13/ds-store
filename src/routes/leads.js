@@ -2,80 +2,113 @@
 
 var express = require('express'),
     router = express.Router();
-var Lead = require('../models/lead');
+var Listing = require('../models/Listing');
+var Snipe = require('../models/Snipe');
+var Supply = require('../models/Supply');
 
 /**
  * @index
  */
 router.get('/', function (req, res) {
-    return Lead.getAll()
-        .then(function (leads) {
-            return res.json(leads);
-        })
-        .catch(function (err) {
-            return res.error(err);
-        });
+    return res.status(200).json();
 });
 
 /**
- * @create
+ * @createOrUpdate
  */
 router.post('/', function (req, res) {
-    return Lead.createOrUpdate(req.body)
-        .then(function (result) {
-            if (result.errors > 0)
-                return res.error(400, result.first_error);
+    return res.status(201).json();
+});
 
-            if (result.inserted > 0)
-                return res.status(201).json();
-
-            if (result.replaced > 0 || result.skipped > 0 || result.unchanged > 0)
-                return res.status(204).json();
-
-            return res.error(501, 'Unknown error');
-        })
-        .catch(function (err) {
-            return res.error(err);
-        });
+/**
+ * @sync
+ */
+router.put('/sync', function (req, res) {
+    return res.status(201).json();
 });
 
 /**
  * @show
  */
-router.get('/:id', function (req, res) {
-    return Lead.getOne(req.params.id)
-        .then(function (lead) {
-            return res.json(lead);
-        })
-        .catch(function (err) {
-            return res.error(err);
-        });
+router.get('/:lead_id', function (req, res) {
+    return res.status(200).json();
 });
 
 /**
- * @update
+ * @destroy
  */
-router.patch('/:id', function (req, res) {
-    return Lead.createOrUpdate(req.body)
-        .then(function (result) {
-            return res.json(result);
-        })
-        .catch(function (err) {
-            return res.error(err);
-        });
+router.delete('/:lead_id', function (req, res) {
+    return res.status(202).json();
 });
 
 /**
- * destroy
+ * @refresh
  */
-router.delete('/:id', function (req, res) {
-    return Lead.destroy(req.params.id)
-        .then(function (result) {
-            return res.json(result);
-        })
-        .catch(function (err) {
-            return res.error(err);
-        });
+router.put('/:lead_id/refresh', function (req, res) {
+    return res.status(202).json();
+});
+
+/**
+ * @edit
+ */
+router.patch('/:lead_id/edit', function (req, res) {
+    return res.status(202).json();
+});
+
+/**
+ * @list
+ */
+router.patch('/:lead_id/list', function (req, res) {
+    return res.status(202).json();
+});
+
+/**
+ * @reprice
+ */
+router.patch('/:lead_id/reprice', function (req, res) {
+    return res.status(202).json();
+});
+
+/**
+ * supplies@createOrUpdate
+ */
+router.post('/:lead_id/supplies', function (req, res) {
+    return res.status(201).json();
+});
+
+/**
+ * supplies@destroy
+ */
+router.post('/:lead_id/supplies/:supply_id', function (req, res) {
+    return res.status(202).json();
+});
+
+/**
+ * supplies@refresh
+ */
+router.put('/:lead_id/supplies/:supply_id', function (req, res) {
+    return res.status(201).json();
+});
+
+/**
+ * snipes@createOrUpdate
+ */
+router.post('/:lead_id/snipes', function (req, res) {
+    return res.status(201).json();
+});
+
+/**
+ * snipes@destroy
+ */
+router.post('/:lead_id/snipes/:supply_id', function (req, res) {
+    return res.status(202).json();
+});
+
+/**
+ * snipes@refresh
+ */
+router.put('/:lead_id/snipes/:supply_id', function (req, res) {
+    return res.status(201).json();
 });
 
 module.exports = router;

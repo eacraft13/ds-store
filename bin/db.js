@@ -7,22 +7,20 @@ var schemas;
 
 schemas = [
     {
-        name: 'lead',
-        primaryKey: 'resaleId'
-    },
-    {
-        name: 'listing',
-        primaryKey: 'resaleId'
-    },
-    {
-        name: 'resale',
+        name: 'leads',
         primaryKey: 'id'
     },
     {
-        name: 'sale',
+        name: 'listings',
+        primaryKey: 'id'
     },
     {
-        name: 'supply'
+        name: 'snipes',
+        primaryKey: 'id'
+    },
+    {
+        name: 'supplies',
+        primaryKey: 'id'
     }
 ];
 

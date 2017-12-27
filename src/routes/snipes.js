@@ -2,7 +2,7 @@
 
 var express = require('express'),
     router = express.Router();
-var Supply = require('../models/Supply');
+var Snipe = require('../models/Snipe');
 
 /**
  * @index
@@ -28,21 +28,21 @@ router.put('/sync', function (req, res) {
 /**
  * @show
  */
-router.get('/:supply_id', function (req, res) {
+router.get('/:snipe_id', function (req, res) {
     return res.status(200).json();
 });
 
 /**
  * @destroy
  */
-router.delete('/:supply_id', function (req, res) {
+router.delete('/:snipe_id', function (req, res) {
     return res.status(202).json();
 });
 
 /**
  * @refresh
  */
-router.put('/:supply_id/refresh', function (req, res) {
+router.put('/:snipe_id/refresh', function (req, res) {
     return res.status(202).json();
 });
 

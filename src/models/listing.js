@@ -1,111 +1,129 @@
 'use strict';
 
+/**
+ * Listings are products that were once or currently listed (i.e. active or inactive) on eBay store
+ */
+
 var r = require('../r');
+var hash = require('object-hash');
 var schema;
 var table = 'listing';
 var Joi = require('joi');
 var Listing = {};
-var Resale = require('./resale');
+var Promise = require('bluebird');
 
 schema = Joi.object().keys({
+    id: Joi.string().required(),
+
+    eBay: Joi.object().keys({
+        finding: Joi.object().allow(null),
+        shopping: Joi.object().required(),
+    }),
+
+    snipes: Joi.array().items(Joi.string()), // [snipe_id]
+    supplies: Joi.array().items(Joi.string()), // [supply_id]
+
     createdAt: Joi.date().timestamp('unix').default(Date.now(), 'created at date'),
-    resaleId: Joi.string().required(),
     updatedAt: Joi.date().timestamp('unix').default(Date.now(), 'updated at date'),
 });
 
 /**
- * Create (or update)
+ * Generates id
  */
-Listing.createOrUpdate = function (resale) {
-    return Resale
-        .createOrUpdate(resale)
-        .then(function (result) {
-            if (result.errors > 0)
-                return Promise.resolve(result);
+Listing.generateId = function (eBayId, variationSpecifics) {
+    var id;
 
-            return new Promise(function (resolve, reject) {
-                var joi = Joi.validate({ resaleId: resale.id }, schema);
+    if (variationSpecifics)
+        id = hash.MD5(variationSpecifics);
+    else
+        id = 0;
 
-                if (joi.error)
-                    return reject(new Error(joi.error));
-
-                r
-                .table(table)
-                .insert(joi.value, {
-                    conflict: function (id, oldDoc, newDoc) {
-                        return oldDoc.merge(newDoc, { updatedAt: Date.now() });
-                    }
-                })
-                .run()
-                .then(function (result) {
-                    return resolve(result);
-                })
-                .error(function (err) {
-                    return reject(new Error(err));
-                });
-            });
-        });
+    return `${eBayId}-${id}`;
 };
 
 /**
- * Get one (by id)
- */
-Listing.getOne = function (id) {
-    return new Promise(function (resolve, reject) {
-        r
-        .table(table)
-        .get(id)
-        .run()
-        .then(function (listing) {
-            return resolve(listing);
-        })
-        .error(function (err) {
-            return reject(new Error(err));
-        });
-    });
-};
-
-/**
- * Get all (by query)
+ * Get all
  */
 Listing.getAll = function (filters) {
-    return new Promise(function (resolve, reject) {
-        var query = r.table(table);
+    var query = r.table(table);
 
-        if (filters)
-            query.filter(filters);
+    if (filters)
+        query.filter(filters);
 
-        query
+    return query
         .run()
         .then(function (cursor) {
             return cursor.toArray();
-        })
-        .then(function (listings) {
-            return resolve(listings);
-        })
-        .error(function (err) {
-            return reject(new Error(err));
         });
-    });
+};
+
+/**
+ * Get (by id)
+ */
+Listing.get = function (id) {
+    return r
+        .table(table)
+        .get(id)
+        .run();
 };
 
 /**
  * Destroy (by id)
  */
 Listing.destroy = function (id) {
-    return new Promise(function (resolve, reject) {
-        r
+    return r
         .table(table)
         .get(id)
         .delete()
-        .run()
-        .then(function (result) {
-            return resolve(result);
-        })
-        .error(function (err) {
-            return reject(new Error(err));
-        });
-    });
+        .run();
+};
+
+/**
+ * Create (or update)
+ */
+Listing.createOrUpdate = function (eBayId, variationSpecifics) {
+};
+
+/**
+ * Sync all
+ */
+Listing.sync = function () {
+
+};
+
+/**
+ * Refresh (by id)
+ */
+Listing.refresh = function (id) {
+
+};
+
+/**
+ * Edit listing
+ */
+Listing.edit = function (id, options) {
+
+};
+
+/**
+ * End listing
+ */
+Listing.end = function (id) {
+
+};
+
+/**
+ * Activate listing
+ */
+Listing.activate = function (id) {
+
+};
+
+/**
+ * Reprice listing
+ */
+Listing.reprice = function (id, price) {
+
 };
 
 module.exports = Listing;

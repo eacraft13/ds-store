@@ -1,16 +1,16 @@
 'use strict';
 
 /**
- * Leads are potential listings (but have not or ever been listed) for eBay store
+ * Snipes are listings from other eBay stores
  */
 
 var r = require('../r');
 var hash = require('object-hash');
 var schema;
-var table = 'listing';
+var table = 'snipes';
 var Joi = require('joi');
-var Lead = {};
 var Promise = require('bluebird');
+var Snipe = {};
 
 schema = Joi.object().keys({
     id: Joi.string().required(),
@@ -20,9 +20,6 @@ schema = Joi.object().keys({
         shopping: Joi.object().required(),
     }),
 
-    snipes: Joi.array().items(Joi.string()), // [snipe_id]
-    supplies: Joi.array().items(Joi.string()), // [supply_id]
-
     createdAt: Joi.date().timestamp('unix').default(Date.now(), 'created at date'),
     updatedAt: Joi.date().timestamp('unix').default(Date.now(), 'updated at date'),
 });
@@ -30,7 +27,7 @@ schema = Joi.object().keys({
 /**
  * Generates id
  */
-Lead.generateId = function (eBayId, variationSpecifics) {
+Snipe.generateId = function (eBayId, variationSpecifics) {
     var id;
 
     if (variationSpecifics)
@@ -44,7 +41,7 @@ Lead.generateId = function (eBayId, variationSpecifics) {
 /**
  * Get all
  */
-Lead.getAll = function (filters) {
+Snipe.getAll = function (filters) {
     var query = r.table(table);
 
     if (filters)
@@ -60,7 +57,7 @@ Lead.getAll = function (filters) {
 /**
  * Get (by id)
  */
-Lead.get = function (id) {
+Snipe.get = function (id) {
     return r
         .table(table)
         .get(id)
@@ -70,7 +67,7 @@ Lead.get = function (id) {
 /**
  * Destroy (by id)
  */
-Lead.destroy = function (id) {
+Snipe.destroy = function (id) {
     return r
         .table(table)
         .get(id)
@@ -81,43 +78,22 @@ Lead.destroy = function (id) {
 /**
  * Create (or update)
  */
-Lead.createOrUpdate = function (eBayId, variationSpecifics) {
+Snipe.createOrUpdate = function (eBayId, variationSpecifics) {
 };
 
 /**
  * Sync all
  */
-Lead.sync = function () {
+Snipe.sync = function () {
 
 };
 
 /**
  * Refresh (by id)
  */
-Lead.refresh = function (id) {
+Snipe.refresh = function (id) {
 
 };
 
-/**
- * Edit lead
- */
-Lead.edit = function (id, options) {
-
-};
-
-/**
- * List lead
- */
-Lead.list = function (id) {
-
-};
-
-/**
- * Reprice lead
- */
-Lead.reprice = function (id, price) {
-
-};
-
-module.exports = Lead;
+module.exports = Snipe;
 
