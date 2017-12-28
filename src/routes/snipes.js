@@ -222,7 +222,29 @@ router.get('/:snipe_id', function (req, res) {
  * @destroy
  */
 router.delete('/:snipe_id', function (req, res) {
-    return res.status(202).json();
+    return Snipe
+        .destroy(req.params.snipe_id)
+        .then(function (result) {
+            if (result.errors > 0)
+                return res.status(400).json(result);
+
+            return req.resale.snipes = _.difference(req.resale.snipes, [req.params.snipe_id]);
+        })
+        .then(function () {
+            return req.model.createOrUpdate(req.resale);
+        })
+        .then(function (result) {
+            if (result.errors > 0)
+                return res.error(400, result.first_error);
+
+            if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0)
+                return res.status(201).json(result);
+
+            return res.error(501, result);
+        })
+        .catch(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
