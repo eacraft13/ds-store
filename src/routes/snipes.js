@@ -205,7 +205,17 @@ router.put('/sync', function (req, res) {
  * @show
  */
 router.get('/:snipe_id', function (req, res) {
-    return res.status(200).json();
+    return Snipe
+        .get(req.params.snipe_id)
+        .then(function (snipe) {
+            if (!snipe || !_.includes(req.resale.snipes, snipe.id))
+                return res.status(400).json({});
+
+            return res.json(snipe);
+        })
+        .catch(function (err) {
+            return res.error(err);
+        });
 });
 
 /**
