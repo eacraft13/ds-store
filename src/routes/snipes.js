@@ -29,7 +29,7 @@ router.post('/', function (req, res) {
         .createOrUpdate(req.body)
         .then(function (result) {
             if (result.errors > 0)
-                return res.error(400, result.first_error);
+                return result;
 
             if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0) {
                 req.resale.snipes = _.union(
@@ -42,7 +42,7 @@ router.post('/', function (req, res) {
                 return req.model.createOrUpdate(req.resale);
             }
 
-            return res.error(501, result);
+            return Promise.reject(new Error(result));
         })
         .then(function (result) {
             if (result.errors > 0)
@@ -51,8 +51,7 @@ router.post('/', function (req, res) {
             if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0)
                 return res.status(201).json(result);
 
-            return res.error(501, result);
-
+            return Promise.reject(new Error(result));
         })
         .catch(function (err) {
             return res.error(err);
@@ -71,49 +70,59 @@ router.post('/add', function (req, res) {
     return Snipe
         .add(snipeId)
         .then(function (results) {
-            var errors = _.filter(results, function (result) {
+            var changes, errors, isSuccess;
+
+            errors = _.filter(results, function (result) {
                 return result.errors > 0;
             });
 
             if (errors.length > 0)
-                return res.error(400, _.map(results, function (result) {
-                    return result.first_error;
-                }).join(';'));
+                return results;
 
-            if (
-                _.every(results, function (result) {
-                    return result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0
-                })
-            ) {
-                req.resale.snipes = _.union(
-                    req.resale.snipes,
-                    _(results)
-                        .map(function (result) {
-                            return _.map(result.changes, function (change) {
-                                return change.new_val.id;
-                            });
-                        })
-                        .flatten()
-                        .valueOf()
-                );
+            isSuccess = _.every(results, function (result) {
+                return result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0;
+            });
+
+            if (isSuccess) {
+                changes = _(results)
+                    .map(function (result) {
+                        return _.map(result.changes, function (change) {
+                            return change.new_val.id;
+                        });
+                    })
+                    .flatten()
+                    .valueOf();
+
+                req.resale.snipes = _.union(req.resale.snipes, changes);
 
                 return req.model.createOrUpdate(req.resale);
             }
 
-            return res.error(501, results);
+            return Promise.reject(new Error(results));
         })
-        .then(function (result) {
-            if (result.errors > 0)
-                return res.error(400, result.first_error);
+        .then(function (results) {
+            var errors, isSuccess;
 
-            if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0)
-                return res.status(201).json(result);
+            if (!Array.isArray)
+                results = [results];
 
-            return res.error(501, result);
+            errors = _.filter(results, function (result) {
+                return result.errors > 0;
+            });
 
+            if (errors.length > 0)
+                return res.error(400, _.map(results, 'first_error'));
+
+            isSuccess = _.every(results, function (result) {
+                return result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0;
+            });
+
+            if (isSuccess)
+                return res.status(201).json(results);
+
+            return Promise.reject(new Error(results));
         })
         .catch(function (err) {
-            console.log(err);
             return res.error(err);
         });
 });
@@ -155,8 +164,7 @@ router.delete('/remove', function (req, res) {
             if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0)
                 return res.status(202).json(result);
 
-            return res.error(501, result);
-
+            return Promise.reject(new Error(result));
         })
         .catch(function (err) {
             return res.error(err);
@@ -171,7 +179,10 @@ router.put('/sync', function (req, res) {
         .sync(req.resale.snipes)
         .then(function (result) {
             if (result.errors > 0)
-                return res.error(400, result.first_error);
+                return result;
+
+            if (Array.isArray(result) && result.length === 0)
+                return result;
 
             if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0) {
                 req.resale.snipes = _.union(
@@ -184,17 +195,19 @@ router.put('/sync', function (req, res) {
                 return req.model.createOrUpdate(req.resale);
             }
 
-            return res.error(501, result);
+            return Promise.reject(new Error(result));
         })
         .then(function (result) {
             if (result.errors > 0)
                 return res.error(400, result.first_error);
 
+            if (Array.isArray(result) && result.length === 0)
+                return res.error(400);
+
             if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0)
                 return res.status(201).json(result);
 
-            return res.error(501, result);
-
+            return Promise.reject(new Error(result));
         })
         .catch(function (err) {
             return res.error(err);
@@ -209,7 +222,7 @@ router.get('/:snipe_id', function (req, res) {
         .get(req.params.snipe_id)
         .then(function (snipe) {
             if (!snipe || !_.includes(req.resale.snipes, snipe.id))
-                return res.status(400).json({});
+                return res.error(400, snipe);
 
             return res.json(snipe);
         })
@@ -226,11 +239,14 @@ router.delete('/:snipe_id', function (req, res) {
         .destroy(req.params.snipe_id)
         .then(function (result) {
             if (result.errors > 0)
-                return res.status(400).json(result);
+                return result;
 
             return req.resale.snipes = _.difference(req.resale.snipes, [req.params.snipe_id]);
         })
-        .then(function () {
+        .then(function (result) {
+            if (result.errors > 0)
+                return result;
+
             return req.model.createOrUpdate(req.resale);
         })
         .then(function (result) {
@@ -238,9 +254,9 @@ router.delete('/:snipe_id', function (req, res) {
                 return res.error(400, result.first_error);
 
             if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0)
-                return res.status(201).json(result);
+                return res.status(202).json(result);
 
-            return res.error(501, result);
+            return Promise.reject(new Error(result));
         })
         .catch(function (err) {
             return res.error(err);
