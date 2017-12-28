@@ -79,10 +79,7 @@ router.get('/:listing_id', function (req, res) {
     return Listing
         .get(req.params.listing_id)
         .then(function (listing) {
-            if (!listing)
-                return res.error(404, 'Listing not found');
-
-            return res.json(listing);
+            return res.json(listing || {});
         })
         .catch(function (err) {
             return res.error(err);

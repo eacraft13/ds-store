@@ -202,7 +202,7 @@ router.put('/sync', function (req, res) {
                 return res.error(400, result.first_error);
 
             if (Array.isArray(result) && result.length === 0)
-                return res.error(400);
+                return res.error(400, result);
 
             if (result.skipped > 0 || result.unchanged > 0)
                 return res.status(201).json(result);
@@ -222,12 +222,9 @@ router.put('/sync', function (req, res) {
  */
 router.get('/:snipe_id', function (req, res) {
     return Snipe
-        .get(req.params.snipe_id)
+        .get(_.intersection(req.resale.snipes, req.params.snipe_id))
         .then(function (snipe) {
-            if (!snipe || !_.includes(req.resale.snipes, snipe.id))
-                return res.error(404, 'Snipe not found');
-
-            return res.json(snipe);
+            return res.json(snipe || {});
         })
         .catch(function (err) {
             return res.error(err);
@@ -273,7 +270,43 @@ router.delete('/:snipe_id', function (req, res) {
  * @refresh
  */
 router.put('/:snipe_id/refresh', function (req, res) {
-    return res.status(202).json();
+    return Snipe
+        .refresh(_.intersection(req.resale.snipes, [req.params.snipe_id]))
+        .then(function (result) {
+            if (result.errors > 0)
+                return result;
+
+            if (Array.isArray(result) && result.length === 0)
+                return result;
+
+            if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0) {
+                req.resale.snipes = _.union(req.resale.snipes, _.map(result.changes, function (change) {
+                    return change.new_val.id;
+                }));
+
+                return req.model.createOrUpdate(req.resale);
+            }
+
+            return Promise.reject(new Error(result));
+        })
+        .then(function (result) {
+            if (result.errors > 0)
+                return res.error(400, result.first_error);
+
+            if (Array.isArray(result) && result.length === 0)
+                return res.error(400, result);
+
+            if (result.skipped > 0 || result.unchanged > 0)
+                return res.status(201).json(result);
+
+            if (result.inserted > 0 || result.replaced > 0)
+                return res.status(201).json(result);
+
+            return Promise.reject(new Error(result));
+        })
+        .catch(function (err) {
+            return res.error(err);
+        });
 });
 
 module.exports = router;

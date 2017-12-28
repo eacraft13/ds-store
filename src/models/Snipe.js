@@ -192,7 +192,29 @@ Snipe.sync = function (ids) {
  * Refresh (by id)
  */
 Snipe.refresh = function (id) {
+    var explodedId = ebay.shopping.explodeId(id);
+    var self = this;
 
+    return ebay
+        .shopping
+        .getMultipleItems([explodedId.itemId])
+        .then(function (items) {
+            return {
+                ebay: {
+                    shopping: items[0]
+                }
+            };
+        })
+        .then(function (snipe) {
+            var variation = ebay.shopping.getVariation(snipe.ebay.shopping, explodedId.variationHash);
+
+            snipe.ebay.shopping = variation;
+
+            return snipe;
+        })
+        .then(function (snipe) {
+            return self.createOrUpdate(snipe);
+        });
 };
 
 module.exports = Snipe;
