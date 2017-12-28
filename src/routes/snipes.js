@@ -102,7 +102,7 @@ router.post('/add', function (req, res) {
         .then(function (results) {
             var errors, isSuccess;
 
-            if (!Array.isArray)
+            if (!Array.isArray(results))
                 results = [results];
 
             errors = _.filter(results, function (result) {
@@ -192,8 +192,10 @@ router.put('/sync', function (req, res) {
  * @show
  */
 router.get('/:snipe_id', function (req, res) {
+    var ids = _.intersection(req.resale.snipes, [req.params.snipe_id]);
+
     return Snipe
-        .get(_.intersection(req.resale.snipes, [req.params.snipe_id]))
+        .get(ids.length ? ids[0] : '')
         .then(function (snipe) {
             return res.json(snipe || {});
         })
@@ -236,8 +238,10 @@ router.delete('/:snipe_id', function (req, res) {
  * @refresh
  */
 router.put('/:snipe_id/refresh', function (req, res) {
+    var ids = _.intersection(req.resale.snipes, [req.params.snipe_id]);
+
     return Snipe
-        .refresh(_.intersection(req.resale.snipes, [req.params.snipe_id]))
+        .refresh(ids[0])
         .then(function (result) {
             if (result.errors > 0)
                 return res.error(400, result.first_error);

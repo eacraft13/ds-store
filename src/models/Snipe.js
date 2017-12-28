@@ -150,7 +150,7 @@ Snipe.remove = function (itemId) {
         .then(function (items) {
             return _(items)
                 .map(function (item) {
-                    var variations = ebay.shopping.explodeVariation(item);
+                    var variations = ebay.shopping.explodeVariations(item);
 
                     return _.map(variations, function (variation) {
                         return ebay.shopping.generateId(variation);
@@ -165,15 +165,16 @@ Snipe.remove = function (itemId) {
  * Sync all
  */
 Snipe.sync = function (ids) {
+    var explodedIds;
     var self = this;
 
-    ids = _.map(ids, function (id) {
-        return ebay.shopping.explodeId(id)[0];
+    explodedIds = _.map(ids, function (id) {
+        return ebay.shopping.explodeId(id);
     });
 
     return ebay
         .shopping
-        .getMultipleItems(ids)
+        .getMultipleItems(_.map(explodedIds, 'itemId'))
         .then(function (items) {
             return _.map(items, function (item) {
                 return {
@@ -186,17 +187,17 @@ Snipe.sync = function (ids) {
         .then(function (resales) {
             return _(resales)
                 .map(function (resale) {
-                    var variations = ebay.shopping.explodeVariations(resale.ebay.shopping);
+                    var resaleId, variation;
 
-                    return _.map(variations, function (variation) {
-                        var clone = _.cloneDeep(resale);
-
-                        clone.ebay.shopping = variation;
-
-                        return clone;
+                    resaleId = _.find(explodedIds, function (explodedId) {
+                        return explodedId.itemId = resale.ebay.shopping.ItemID;
                     });
+                    variation = ebay.shopping.getVariation(resale.ebay.shopping, resaleId.variationHash);
+
+                    resale.ebay.shopping = variation;
+
+                    return resale;
                 })
-                .flatten()
                 .valueOf();
         })
         .then(function (resales) {
@@ -213,8 +214,13 @@ Snipe.sync = function (ids) {
  * Refresh (by id)
  */
 Snipe.refresh = function (id) {
-    var explodedId = ebay.shopping.explodeId(id);
+    var explodedId;
     var self = this;
+
+    if (!id)
+        return Promise.resolve({ unchanged: 1 });
+
+    explodedId = ebay.shopping.explodeId(id);
 
     return ebay
         .shopping
