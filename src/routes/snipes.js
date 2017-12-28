@@ -2,7 +2,6 @@
 
 var Snipe   = require('../models/Snipe');
 var _       = require('lodash');
-var ebay    = require('ebay-dev-api')(require('../../private/ebay'));
 var express = require('express'),
     router  = express.Router();
 var url     = require('url');
@@ -136,25 +135,10 @@ router.delete('/remove', function (req, res) {
 
     snipeId = snipeUrl.pathname.split('/')[2];
 
-    return ebay
-        .shopping
-        .getMultipleItems([snipeId])
-        .then(function (items) {
-            return _(items)
-                .map(function (item) {
-                    var variations = ebay.shopping.explodeVariations(item);
-
-                    return _.map(variations, function (variation) {
-                        return ebay.shopping.generateId(variation);
-                    });
-                })
-                .flatten()
-                .valueOf();
-        })
+    return Snipe
+        .remove(snipeId)
         .then(function (ids) {
-            return req.resale.snipes = _.difference(req.resale.snipes, ids);
-        })
-        .then(function () {
+            req.resale.snipes = _.difference(req.resale.snipes, ids);
             return req.model.createOrUpdate(req.resale);
         })
         .then(function (result) {
@@ -180,37 +164,24 @@ router.delete('/remove', function (req, res) {
 router.put('/sync', function (req, res) {
     return Snipe
         .sync(req.resale.snipes)
-        .then(function (result) {
-            if (result.errors > 0)
-                return result;
+        .then(function (results) {
+            var errors, isSuccess;
 
-            if (Array.isArray(result) && result.length === 0)
-                return result;
+            errors = _.filter(results, function (result) {
+                return result.errors > 0;
+            });
 
-            if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0) {
-                req.resale.snipes = _.union(req.resale.snipes, _.map(result.changes, function (change) {
-                    return change.new_val.id;
-                }));
+            if (errors.length > 0)
+                return res.error(400, _.map(results, 'first_error'));
 
-                return req.model.createOrUpdate(req.resale);
-            }
+            isSuccess = _.every(results, function (result) {
+                return result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0;
+            });
 
-            return Promise.reject(new Error(result));
-        })
-        .then(function (result) {
-            if (result.errors > 0)
-                return res.error(400, result.first_error);
+            if (isSuccess)
+                return res.status(201).json(results);
 
-            if (Array.isArray(result) && result.length === 0)
-                return res.error(400, result);
-
-            if (result.skipped > 0 || result.unchanged > 0)
-                return res.status(201).json(result);
-
-            if (result.inserted > 0 || result.replaced > 0)
-                return res.status(201).json(result);
-
-            return Promise.reject(new Error(result));
+            return Promise.reject(new Error(results));
         })
         .catch(function (err) {
             return res.error(err);
@@ -222,7 +193,7 @@ router.put('/sync', function (req, res) {
  */
 router.get('/:snipe_id', function (req, res) {
     return Snipe
-        .get(_.intersection(req.resale.snipes, req.params.snipe_id))
+        .get(_.intersection(req.resale.snipes, [req.params.snipe_id]))
         .then(function (snipe) {
             return res.json(snipe || {});
         })
@@ -236,17 +207,12 @@ router.get('/:snipe_id', function (req, res) {
  */
 router.delete('/:snipe_id', function (req, res) {
     return Snipe
-        .destroy(req.params.snipe_id)
+        .destroy(_.intersection(req.resale.snipes, [req.params.snipe_id]))
         .then(function (result) {
             if (result.errors > 0)
                 return result;
 
-            return req.resale.snipes = _.difference(req.resale.snipes, [req.params.snipe_id]);
-        })
-        .then(function (result) {
-            if (result.errors > 0)
-                return result;
-
+            req.resale.snipes = _.difference(req.resale.snipes, [req.params.snipe_id]);
             return req.model.createOrUpdate(req.resale);
         })
         .then(function (result) {
@@ -272,23 +238,6 @@ router.delete('/:snipe_id', function (req, res) {
 router.put('/:snipe_id/refresh', function (req, res) {
     return Snipe
         .refresh(_.intersection(req.resale.snipes, [req.params.snipe_id]))
-        .then(function (result) {
-            if (result.errors > 0)
-                return result;
-
-            if (Array.isArray(result) && result.length === 0)
-                return result;
-
-            if (result.inserted > 0 || result.replaced > 0 || result.skipped > 0 || result.unchanged > 0) {
-                req.resale.snipes = _.union(req.resale.snipes, _.map(result.changes, function (change) {
-                    return change.new_val.id;
-                }));
-
-                return req.model.createOrUpdate(req.resale);
-            }
-
-            return Promise.reject(new Error(result));
-        })
         .then(function (result) {
             if (result.errors > 0)
                 return res.error(400, result.first_error);

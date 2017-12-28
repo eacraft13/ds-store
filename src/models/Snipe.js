@@ -141,6 +141,27 @@ Snipe.add = function (itemId) {
 };
 
 /**
+ * Remove (by itemId)
+ */
+Snipe.remove = function (itemId) {
+    return ebay
+        .shopping
+        .getMultipleItems([itemId])
+        .then(function (items) {
+            return _(items)
+                .map(function (item) {
+                    var variations = ebay.shopping.explodeVariation(item);
+
+                    return _.map(variations, function (variation) {
+                        return ebay.shopping.generateId(variation);
+                    });
+                })
+                .flatten()
+                .valueOf();
+        });
+};
+
+/**
  * Sync all
  */
 Snipe.sync = function (ids) {
