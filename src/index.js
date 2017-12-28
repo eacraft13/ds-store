@@ -1,7 +1,7 @@
 'use strict';
 
 var Listing  = require('./models/Listing');
-var config   = require('./config/app');
+var config   = require('./config/server');
 var cors     = require('cors');
 var express  = require('express'),
     app      = express();
