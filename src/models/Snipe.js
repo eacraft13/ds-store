@@ -1,20 +1,25 @@
-'use strict';
-
 /**
  * Snipes are listings from other eBay stores
  */
 
-var r = require('../r');
-var schema;
-var table = 'snipes';
-var Joi = require('joi');
-var Promise = require('bluebird');
-var Snipe = {};
+'use strict';
 
+var Joi     = require('joi');
+var Promise = require('bluebird');
+var Snipe   = {};
+var _       = require('lodash');
+var ebay    = require('ebay-dev-api')(require('../../private/ebay'));
+var r       = require('../r');
+var schema;
+var table   = 'snipes';
+
+/**
+ * Snipe schema
+ */
 schema = Joi.object().keys({
     id: Joi.string().required(),
 
-    eBay: Joi.object().keys({
+    ebay: Joi.object().keys({
         finding: Joi.object().allow(null),
         shopping: Joi.object().required(),
     }),
@@ -24,33 +29,24 @@ schema = Joi.object().keys({
 });
 
 /**
- * Generates id
- */
-Snipe.generateId = function (eBayId, variationSpecifics) {
-    var id;
-
-    if (variationSpecifics)
-        id = hash.MD5(variationSpecifics);
-    else
-        id = 0;
-
-    return `${eBayId}-${id}`;
-};
-
-/**
  * Get all
  */
 Snipe.getAll = function (filters) {
-    var query = r.table(table);
+    if (Array.isArray(filters) && filters.length === 0)
+        return r
+            .table(table)
+            .filter(null)
+            .run();
 
     if (filters)
-        query.filter(filters);
+        return r
+            .table(table)
+            .filter(filters)
+            .run();
 
-    return query
-        .run()
-        .then(function (cursor) {
-            return cursor.toArray();
-        });
+    return r
+        .table(table)
+        .run();
 };
 
 /**
@@ -77,14 +73,119 @@ Snipe.destroy = function (id) {
 /**
  * Create (or update)
  */
-Snipe.createOrUpdate = function (eBayId, variationSpecifics) {
+Snipe.createOrUpdate = function (snipe) {
+    var joi;
+
+    delete snipe.createdAt;
+    delete snipe.updatedAt;
+
+    snipe.id = ebay.shopping.generateId(snipe.ebay.shopping);
+    joi = Joi.validate(snipe, schema);
+
+    if (joi.error)
+        return Promise.reject(new Error(joi.error));
+
+    return r
+        .table(table)
+        .insert(joi.value, {
+            conflict: function (id, oldDoc, newDoc) {
+                return oldDoc.merge(newDoc, { updatedAt: Date.now() });
+            },
+            returnChanges: true
+        })
+        .run();
+};
+
+/**
+ * Add (by itemId)
+ */
+Snipe.add = function (itemId) {
+    var self = this;
+
+    return ebay
+        .shopping
+        .getMultipleItems([itemId])
+        .then(function (items) {
+            return _.map(items, function (item) {
+                return {
+                    ebay: {
+                        shopping: item
+                    }
+                };
+            });
+        })
+        .then(function (resales) {
+            return _(resales)
+                .map(function (resale) {
+                    var variations = ebay.shopping.explodeVariations(resale.ebay.shopping);
+
+                    return _.map(variations, function (variation) {
+                        var clone = _.cloneDeep(resale);
+
+                        clone.ebay.shopping = variation;
+
+                        return clone;
+                    });
+                })
+                .flatten()
+                .valueOf();
+        })
+        .then(function (resales) {
+            return Promise
+                .all(
+                    _.map(resales, function (resale) {
+                        return self.createOrUpdate(resale);
+                    })
+                );
+        });
 };
 
 /**
  * Sync all
  */
-Snipe.sync = function () {
+Snipe.sync = function (ids) {
+    var self = this;
 
+    ids = _.map(ids, function (id) {
+        return ebay.shopping.explodeId(id)[0];
+    });
+
+    return ebay
+        .shopping
+        .getMultipleItems(ids)
+        .then(function (items) {
+            return _.map(items, function (item) {
+                return {
+                    ebay: {
+                        shopping: item
+                    }
+                };
+            });
+        })
+        .then(function (resales) {
+            return _(resales)
+                .map(function (resale) {
+                    var variations = ebay.shopping.explodeVariations(resale.ebay.shopping);
+
+                    return _.map(variations, function (variation) {
+                        var clone = _.cloneDeep(resale);
+
+                        clone.ebay.shopping = variation;
+
+                        return clone;
+                    });
+                })
+                .flatten()
+                .valueOf();
+        })
+        .then(function (resales) {
+            return Promise
+                .all(
+                    _.map(resales, function (resale) {
+                        return self.createOrUpdate(resale);
+                    })
+                );
+        });
 };
 
 /**

@@ -42,7 +42,6 @@ Listing.getAll = function (filters) {
 
     return query
         .run();
-        //todo - join snipes and supplies
 };
 
 /**
@@ -53,7 +52,6 @@ Listing.get = function (id) {
         .table(table)
         .get(id)
         .run();
-        // todo - join snipes and supplies
 };
 
 /**
@@ -73,11 +71,14 @@ Listing.destroy = function (id) {
 Listing.createOrUpdate = function (listing) {
     var joi;
 
+    delete listing.createdAt;
+    delete listing.updatedAt;
+
     listing.id = ebay.shopping.generateId(listing.ebay.shopping);
     joi = Joi.validate(listing, schema);
 
     if (joi.error)
-        Promise.reject(new Error(joi.error));
+        return Promise.reject(new Error(joi.error));
 
     return r
         .table(table)
