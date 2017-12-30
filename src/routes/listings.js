@@ -37,3 +37,5 @@ router.post('/:id/relist', function (req, res) {
 
     return res.send('WIP');
 });
+
+module.exports = router;

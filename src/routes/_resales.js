@@ -83,4 +83,6 @@ module.exports = function (Resale) {
                 return res.error(err);
             });
     });
+
+    return router;
 };

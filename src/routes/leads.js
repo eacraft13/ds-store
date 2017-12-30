@@ -28,3 +28,5 @@ router.post('/:id/list', function (req, res) {
 
     return res.send('WIP');
 });
+
+module.exports = router;

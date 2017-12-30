@@ -6,7 +6,7 @@ var express  = require('express'),
     app      = express();
 var morgan   = require('morgan');
 var r        = require('./r');
-var rHandler = require('./utils/rHandler');
+var rHandler = require('./util/rHandler');
 var resError = require('res-error');
 
 app.use(cors());
