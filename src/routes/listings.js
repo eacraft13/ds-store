@@ -23,7 +23,7 @@ router.put('/sync', function (req, res) {
         .finding
         .findItemsIneBayStores({ storeName: ebay.storeName })
         .then(function (items) {
-            return _.map(items, function (item) {
+            return _.map(items[0].item, function (item) {
                 return {
                     ebay: {
                         finding: item
@@ -32,12 +32,16 @@ router.put('/sync', function (req, res) {
             });
         })
         .then(function (listings) {
+            var ids = _.map(listings, function (listing) {
+                return listing.ebay.finding.itemId[0];
+            });
+
             return ebay
                 .shopping
-                .getMultipleItems(_.map(listings, 'itemId[0]'))
+                .getMultipleItems(ids)
                 .then(function (items) {
                     return _.map(listings, function (listing) {
-                        listing.ebay.shopping = _.find(items[0].item, { ItemID: listing.ebay.finding.itemId[0] });
+                        listing.ebay.shopping = _.find(items, { ItemID: listing.ebay.finding.itemId[0] });
                         return listing;
                     });
                 });
@@ -53,6 +57,7 @@ router.put('/sync', function (req, res) {
                     return _.map(variations, function (variation) {
                         var clone = _.cloneDeep(listing);
 
+                        clone.id = ebay.shopping.generateId(variation);
                         clone.ebay.shopping = variation;
 
                         return clone;
@@ -65,7 +70,7 @@ router.put('/sync', function (req, res) {
             return Promise
                 .all(
                     _.map(listings, function (listing) {
-                        return Listing.create(listing);
+                        return Listing.createOrUpdate(listing);
                     })
                 );
         })

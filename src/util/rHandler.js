@@ -21,19 +21,25 @@ module.exports = function (req, res, next) {
     };
 
     res.results = function (results) {
-        if (_.some(results, (result) => result.errors > 0))
-            return res.status(400).json(results);
+        var result = _.reduce(results, function (val, memo) {
+            return {
+                deleted:   memo.deleted   + +val.deleted || 0,
+                errors:    memo.errors    + +val.errors || 0,
+                inserted:  memo.inserted  + +val.inserted || 0,
+                replaced:  memo.replaced  + +val.replaced || 0,
+                skipped:   memo.skipped   + +val.skipped || 0,
+                unchanged: memo.unchanged + +val.unchanged || 0
+            };
+        }, {
+            deleted: 0,
+            errors: 0,
+            inserted: 0,
+            replaced: 0,
+            skipped: 0,
+            unchanged: 0
+        });
 
-        if (_.every(results, (result) => result.skipped > 0 || result.unchanged > 0))
-            return res.status(304).json(results);
-
-        if (_.some(results, (result) => result.inserted > 0 || result.replaced > 0))
-            return res.status(201).json(results);
-
-        if (_.some(results, (result) => result.deleted > 0))
-            return res.status(202).json(results);
-
-        return Promise.reject(new Error(JSON.stringify(results)));
+        return res.result(result);
     };
 
     next();

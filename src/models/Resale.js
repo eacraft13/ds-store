@@ -3,7 +3,6 @@
 var Joi     = require('joi');
 var Promise = require('bluebird');
 var r       = require('../r');
-var uuidv4  = require('uuid/v4');
 
 /**
  * Abstract resale model
@@ -17,12 +16,7 @@ module.exports = function (tableName) {
      * Schema
      */
     schema = Joi.object().keys({
-        id: Joi.string().guid().default(uuidv4()), // primary key
-
-        resaleId: Joi.object().keys({
-            itemId: Joi.string().required(),
-            variationHash: Joi.string().default(0),
-        }),
+        id: Joi.string().required(), // primary key
 
         ebay: Joi.object().keys({
             finding: Joi.object().allow(null),

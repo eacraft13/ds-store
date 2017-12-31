@@ -3,7 +3,6 @@
 var Joi     = require('joi');
 var Promise = require('bluebird');
 var _       = require('lodash');
-var uuidv4  = require('uuid/v4');
 
 /**
  * Abstract snipe model
@@ -18,12 +17,7 @@ module.exports = function (Resale) {
      * Schema
      */
     schema = Joi.object().keys({
-        id: Joi.string().guid().default(uuidv4()), // primary key
-
-        snipeId: Joi.object().keys({
-            itemId: Joi.string().required(),
-            variationHash: Joi.string().default(0),
-        }),
+        id: Joi.string().required(), // primary key
 
         ebay: Joi.object().keys({
             finding: Joi.object().allow(null),
@@ -39,9 +33,6 @@ module.exports = function (Resale) {
      */
     Snipe.createOrReplace = function (resaleId, snipe) {
         var joi;
-
-        delete snipe.createdAt;
-        delete snipe.updatedAt;
 
         joi = Joi.validate(snipe, schema);
 

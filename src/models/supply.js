@@ -3,7 +3,6 @@
 var Joi     = require('joi');
 var Promise = require('bluebird');
 var _       = require('lodash');
-var uuidv4  = require('uuid/v4');
 
 /**
  * Abstract supply model
@@ -18,12 +17,7 @@ module.exports = function (Resale) {
      * Schema
      */
     schema = Joi.object().keys({
-        id: Joi.string().guid().default(uuidv4()), // primary key
-
-        supplyId: Joi.object().keys({
-            merchantName: Joi.string().required(),
-            merchantId: Joi.string().required()
-        }),
+        id: Joi.string().required(), // primary key
 
         merchant: Joi.object(),
 
@@ -36,9 +30,6 @@ module.exports = function (Resale) {
      */
     Supply.createOrReplace = function (resaleId, supply) {
         var joi;
-
-        delete supply.createdAt;
-        delete supply.updatedAt;
 
         joi = Joi.validate(supply, schema);
 
