@@ -26,7 +26,7 @@ module.exports = function (Resale) {
         var resale = req.body;
 
         return Resale
-            .create(resale)
+            .createOrUpdate(resale)
             .then(function (result) {
                 return res.result(result);
             })
@@ -58,8 +58,10 @@ module.exports = function (Resale) {
         var id = req.params.id;
         var resale = req.body;
 
+        resale.id = id;
+
         return Resale
-            .update(id, resale)
+            .createOrUpdate(resale)
             .then(function (result) {
                 return res.result(result);
             })

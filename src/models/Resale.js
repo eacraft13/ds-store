@@ -32,19 +32,16 @@ module.exports = function (tableName) {
         snipes: Joi.array().items(Joi.object()).default([]),
         supplies: Joi.array().items(Joi.object()).default([]),
 
-        createdAt: Joi.date().timestamp('unix').default(Date.now, 'time of creation'),
-        updatedAt: Joi.date().timestamp('unix').default(Date.now, 'time of update'),
+        createdAt: Joi.date().timestamp().default(Date.now, 'time of creation'),
+        updatedAt: Joi.date().timestamp().default(Date.now, 'time of update'),
     });
 
 
     /**
      * Create
      */
-    Resale.create = function (resale) {
+    Resale.createOrUpdate = function (resale) {
         var joi;
-
-        delete resale.createdAt;
-        delete resale.updatedAt;
 
         joi = Joi.validate(resale, schema);
 
@@ -54,8 +51,11 @@ module.exports = function (tableName) {
         return r
             .table(tableName)
             .insert(joi.value, {
-                conflict: function (id, oldDoc, newDoc) {
-                    return oldDoc.merge(newDoc, { updatedAt: Date.now() });
+                conflict: function (docId, oldDoc, newDoc) {
+                    return oldDoc.merge(newDoc, {
+                        createdAt: oldDoc('createdAt'),
+                        updatedAt: newDoc('updatedAt')
+                    });
                 }
             })
             .run();
@@ -80,10 +80,9 @@ module.exports = function (tableName) {
     /**
      * Update
      */
-    Resale.update = function (id, resale) {
+    Resale.replace = function (resale) {
         var joi;
 
-        resale.updatedAt = Date.now();
         joi = Joi.validate(resale, schema);
 
         if (joi.error)
@@ -91,36 +90,16 @@ module.exports = function (tableName) {
 
         return r
             .table(tableName)
-            .get(id)
-            .update(joi.value)
+            .insert(joi.value, {
+                conflict: function (docId, oldDoc, newDoc) {
+                    return oldDoc.replace({
+                        resaleId: newDoc('resaleId'),
+                        ebay: newDoc('ebay'),
+                        updatedAt: newDoc('updatedAt')
+                    });
+                }
+            })
             .run();
-    };
-
-    Resale.replace = function (id, resale) {
-        var joi;
-
-        delete resale.createdAt;
-        delete resale.updatedAt;
-
-        joi = Joi.validate(resale, schema);
-
-        if (joi.error)
-            return Promise.reject(new Error(joi.error));
-
-        return r
-            .table(tableName)
-            .get(id)
-            .run()
-            .then(function (data) {
-                data.resaleId = joi.value.resaleId;
-                data.ebay = joi.value.ebay;
-
-                return r
-                    .table(tableName)
-                    .get(id)
-                    .replace(data)
-                    .run();
-            });
     };
 
     /**

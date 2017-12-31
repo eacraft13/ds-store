@@ -27,8 +27,8 @@ module.exports = function (Resale) {
 
         merchant: Joi.object(),
 
-        createdAt: Joi.date().timestamp('unix').default(Date.now, 'time of creation'),
-        updatedAt: Joi.date().timestamp('unix').default(Date.now, 'time of update'),
+        createdAt: Joi.date().timestamp().default(Date.now, 'time of creation'),
+        updatedAt: Joi.date().timestamp().default(Date.now, 'time of update'),
     });
 
     /**

@@ -1,6 +1,6 @@
 'use strict';
 
-var Lead     = require('../models/Resale')('lead'),
+var Lead     = require('../models/Resale')('leads'),
     Snipe    = require('../models/Snipe')(Lead),
     Supply   = require('../models/Supply')(Lead);
 var express  = require('express'),
