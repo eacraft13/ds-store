@@ -1,5 +1,6 @@
 'use strict';
 
+var ebay = require('ebay-dev-api')(require('../../private/ebay'));
 var express = require('express');
 
 module.exports = function (Resale) {
@@ -25,6 +26,8 @@ module.exports = function (Resale) {
     router.post('/', function (req, res) {
         var resale = req.body;
 
+        resale.id = ebay.shopping.generateId(resale.ebay.shopping);
+
         return Resale
             .createOrUpdate(resale)
             .then(function (result) {
@@ -45,25 +48,6 @@ module.exports = function (Resale) {
             .get(id)
             .then(function (resale) {
                 return res.json(resale);
-            })
-            .catch(function (err) {
-                return res.error(err);
-            });
-    });
-
-    /**
-     * @update
-     */
-    router.patch('/:id', function (req, res) {
-        var id = req.params.id;
-        var resale = req.body;
-
-        resale.id = id;
-
-        return Resale
-            .createOrUpdate(resale)
-            .then(function (result) {
-                return res.result(result);
             })
             .catch(function (err) {
                 return res.error(err);
