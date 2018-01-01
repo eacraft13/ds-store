@@ -1,10 +1,12 @@
 'use strict';
 
-var Promise = require('bluebird');
-var _       = require('lodash');
+var _ = require('lodash');
 
 module.exports = function (req, res, next) {
     res.result = function (result) {
+        if (Array.isArray(result) && result.length === 0)
+            return res.status(404).json(result);
+
         if (result.errors > 0)
             return res.status(400).json(result);
 
@@ -17,7 +19,7 @@ module.exports = function (req, res, next) {
         if (result.deleted > 0)
             return res.status(202).json(result);
 
-        return Promise.reject(new Error(JSON.stringify(result)));
+        return res.status(404).json(result);
     };
 
     res.results = function (results) {

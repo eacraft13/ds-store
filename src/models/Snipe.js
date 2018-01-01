@@ -25,7 +25,6 @@ module.exports = function (Resale) {
         }),
 
         createdAt: Joi.date().timestamp().default(Date.now, 'time of creation'),
-        updatedAt: Joi.date().timestamp().default(Date.now, 'time of update'),
     });
 
     /**
@@ -45,13 +44,13 @@ module.exports = function (Resale) {
                 _.remove(resale.snipes, function (s) {
                     return s.id === joi.value.id;
                 });
-                resale.snipes.push(snipe);
+
+                resale.snipes.push(joi.value);
 
                 return resale;
             })
             .then(function (resale) {
-                return Resale
-                    .update(resaleId, resale);
+                return Resale.createOrUpdate(resale);
             });
     };
 
@@ -62,7 +61,7 @@ module.exports = function (Resale) {
         return Resale
             .get(resaleId)
             .then(function (resale) {
-                return resale.snipes;
+                return resale ? resale.snipes : [];
             });
     };
 
@@ -80,8 +79,7 @@ module.exports = function (Resale) {
                 return resale;
             })
             .then(function (resale) {
-                return Resale
-                    .update(resale);
+                return Resale.createOrUpdate(resale);
             });
     };
 

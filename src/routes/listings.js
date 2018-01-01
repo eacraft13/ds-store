@@ -12,8 +12,14 @@ var snipes   = require('./snipes');
 var supplies = require('./supplies');
 
 router.use('/', resales(Listing));
-router.use('/:id/snipes', snipes(Snipe));
-router.use('/:id/supplies', supplies(Supply));
+router.use('/:id/snipes', function (req, res, next) {
+    req.resaleId = req.params.id;
+    next();
+}, snipes(Snipe));
+router.use('/:id/supplies', function (req, res, next) {
+    req.resaleId = req.params.id;
+    next();
+}, supplies(Supply));
 
 /**
  * @sync
