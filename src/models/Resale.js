@@ -18,13 +18,51 @@ module.exports = function (tableName) {
     schema = Joi.object().keys({
         id: Joi.string().required(), // primary key
 
-        ebay: Joi.object().keys({
-            finding: Joi.object().allow(null),
-            shopping: Joi.object().required(),
-        }).allow(null),
-
+        image: Joi.object().keys({
+            gallery: Joi.string().uri(),
+            images: Joi.array().items(Joi.string().uri())
+        }),
+        specifics: Joi.object().keys({
+            title: Joi.string(),
+            description: Joi.string(),
+            variation: Joi.array().items(Joi.object().keys({
+                name: Joi.string(),
+                value: Joi.string()
+            })),
+            specifics: Joi.array().items(Joi.object().keys({
+                name: Joi.string(),
+                value: Joi.string()
+            })),
+            listedDate: Joi.date().timestamp().raw()
+        }),
+        price: Joi.object().keys({
+            price: Joi.number().min(0).precision(2),
+            tax: Joi.number().min(0).precision(2).default(0),
+            shippingCost: Joi.number().min(0).precision(2).default(0),
+            quantity: Joi.number().min(0)
+        }),
+        shipping: Joi.object().keys({
+            cost: Joi.number().min(0).precision(2),
+            handling: Joi.number().min(0),
+            minTime: Joi.number().min(0),
+            maxTime: Joi.number().min(0)
+        }),
+        profit: Joi.object().keys({
+            snipeId: Joi.string(),
+            supplyId: Joi.string()
+        }),
+        hotness: Joi.object().keys({
+            visits: Joi.number().min(0),
+            watchers: Joi.number().min(0),
+            sold: Joi.number().min(0)
+        }),
         snipes: Joi.array().items(Joi.object()).default([]),
         supplies: Joi.array().items(Joi.object()).default([]),
+
+        '@ebay': Joi.object().keys({
+            '@finding': Joi.string().allow(null), // json
+            '@shopping': Joi.string().allow(null) // json
+        }).default({}),
 
         createdAt: Joi.date().timestamp().raw().default(Date.now, 'time of creation'),
         updatedAt: Joi.date().timestamp().raw().default(Date.now, 'time of update'),
