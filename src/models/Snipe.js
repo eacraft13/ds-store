@@ -24,7 +24,7 @@ module.exports = function (Resale) {
             shopping: Joi.object().required(),
         }),
 
-        createdAt: Joi.date().timestamp().default(Date.now, 'time of creation'),
+        createdAt: Joi.date().timestamp().raw().default(Date.now, 'time of creation'),
     });
 
     /**

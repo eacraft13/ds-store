@@ -26,8 +26,8 @@ module.exports = function (tableName) {
         snipes: Joi.array().items(Joi.object()).default([]),
         supplies: Joi.array().items(Joi.object()).default([]),
 
-        createdAt: Joi.date().timestamp().default(Date.now, 'time of creation'),
-        updatedAt: Joi.date().timestamp().default(Date.now, 'time of update'),
+        createdAt: Joi.date().timestamp().raw().default(Date.now, 'time of creation'),
+        updatedAt: Joi.date().timestamp().raw().default(Date.now, 'time of update'),
     });
 
 

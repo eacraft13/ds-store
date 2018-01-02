@@ -84,11 +84,7 @@ module.exports = function (Snipe) {
             .getMultipleItems([id])
             .then(function (items) {
                 return _.map(items, function (item) {
-                    return {
-                        ebay: {
-                            shopping: item
-                        }
-                    };
+                    return { ebay: { shopping: item } };
                 });
             })
             .then(function (resales) {
