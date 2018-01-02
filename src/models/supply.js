@@ -17,12 +17,12 @@ module.exports = function (Resale) {
      * Schema
      */
     schema = Joi.object().keys({
-        id: Joi.string().required(), // primary key
+        merchant: Joi.string().lowercase().required(),
+        merchantId: Joi.string().required(),
 
-        merchant: Joi.object(),
+        data: Joi.object(),
 
         createdAt: Joi.date().timestamp().raw().default(Date.now, 'time of creation'),
-        updatedAt: Joi.date().timestamp().raw().default(Date.now, 'time of update'),
     });
 
     /**
@@ -40,15 +40,15 @@ module.exports = function (Resale) {
             .get(resaleId)
             .then(function (resale) {
                 _.remove(resale.supplies, function (s) {
-                    return s.id === joi.value.id;
+                    return s.merchantId === joi.value.merchantId && s.merchant === joi.value.merchant;
                 });
-                resale.supplies.push(supply);
+
+                resale.supplies.push(joi.value);
 
                 return resale;
             })
             .then(function (resale) {
-                return Resale
-                    .update(resaleId, resale);
+                return Resale.createOrUpdate(resale);
             });
     };
 
