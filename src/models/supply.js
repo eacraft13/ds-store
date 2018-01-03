@@ -17,8 +17,10 @@ module.exports = function (Resale) {
      * Schema
      */
     schema = Joi.object().keys({
-        merchant: Joi.string().lowercase().required(),
+        id: Joi.string().required(),
+
         merchantId: Joi.string().required(),
+        merchantName: Joi.string().lowercase().required(),
 
         image: Joi.object().keys({
             gallery: Joi.string().uri(),
@@ -35,19 +37,18 @@ module.exports = function (Resale) {
                 name: Joi.string(),
                 value: Joi.string()
             })).default([]),
-            listedDate: Joi.date().timestamp().raw()
+            isAvailable: Joi.boolean()
         }),
         price: Joi.object().keys({
             price: Joi.number().min(0).precision(2),
-            tax: Joi.number().min(0).precision(2).default(0),
+            estimatedTax: Joi.number().min(0).precision(2).default(0),
             shippingCost: Joi.number().min(0).precision(2).default(0),
-            quantity: Joi.number().min(0)
+            hasSingleItemAvailable: Joi.boolean()
         }),
         shipping: Joi.object().keys({
             cost: Joi.number().min(0).precision(2),
-            handling: Joi.number().min(0),
-            minTime: Joi.number().min(0),
-            maxTime: Joi.number().min(0)
+            minDeliveryDate: Joi.date().timestamp().raw(),
+            maxDeliveryDate: Joi.date().timestamp().raw()
         }),
 
         '@merchant': Joi.string().allow(null), // json
@@ -107,8 +108,7 @@ module.exports = function (Resale) {
                 return resale;
             })
             .then(function (resale) {
-                return Resale
-                    .update(resale);
+                return Resale.createOrUpdate(resale);
             });
     };
 
