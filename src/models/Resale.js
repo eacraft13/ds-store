@@ -18,42 +18,48 @@ module.exports = function (tableName) {
     schema = Joi.object().keys({
         id: Joi.string().required(), // primary key
 
+        itemId: Joi.string().required(),
+
         image: Joi.object().keys({
             gallery: Joi.string().uri(),
             images: Joi.array().items(Joi.string().uri())
         }),
         specifics: Joi.object().keys({
             title: Joi.string(),
+            categoryId: Joi.string(),
             description: Joi.string(),
+            item: Joi.array().items(Joi.object().keys({
+                name: Joi.string(),
+                value: Joi.array().items(Joi.string())
+            })),
             variation: Joi.array().items(Joi.object().keys({
                 name: Joi.string(),
-                value: Joi.string()
+                value: Joi.array().items(Joi.string())
             })),
-            specifics: Joi.array().items(Joi.object().keys({
-                name: Joi.string(),
-                value: Joi.string()
-            })),
-            listedDate: Joi.date().timestamp().raw()
+            status: Joi.string(),
+            startTime: Joi.date().timestamp().raw(),
+            endTime: Joi.date().timestamp().raw()
         }),
         price: Joi.object().keys({
             price: Joi.number().min(0).precision(2),
-            tax: Joi.number().min(0).precision(2).default(0),
+            tax: Joi.number().min(0).precision(2).allow(null),
             shippingCost: Joi.number().min(0).precision(2).default(0),
             quantity: Joi.number().min(0)
         }),
         shipping: Joi.object().keys({
             cost: Joi.number().min(0).precision(2),
             handling: Joi.number().min(0),
-            minTime: Joi.number().min(0),
-            maxTime: Joi.number().min(0)
+            minDays: Joi.number().min(0).allow(null),
+            maxDays: Joi.number().min(0).allow(null),
+            isGlobal: Joi.boolean()
         }),
         profit: Joi.object().keys({
-            snipeId: Joi.string(),
-            supplyId: Joi.string()
+            snipeId: Joi.string().allow(null),
+            supplyId: Joi.string().allow(null)
         }),
         hotness: Joi.object().keys({
             visits: Joi.number().min(0),
-            watchers: Joi.number().min(0),
+            watchers: Joi.number().min(0).allow(null),
             sold: Joi.number().min(0)
         }),
         snipes: Joi.array().items(Joi.object()).default([]),

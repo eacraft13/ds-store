@@ -1,6 +1,5 @@
 'use strict';
 
-var ds      = require('ds-client');
 var express = require('express');
 
 module.exports = function (Resale) {
@@ -25,8 +24,6 @@ module.exports = function (Resale) {
      */
     router.post('/', function (req, res) {
         var resale = req.body;
-
-        resale.id = ds.ebay.generateId(resale.ebay.shopping);
 
         return Resale
             .createOrUpdate(resale)

@@ -45,6 +45,11 @@ router.post('/generate', function (req, res) {
             return Promise.all(promises);
         })
         .then(function (leads) {
+            return _.map(leads, function (lead) {
+                return _.omit(lead, ['profit']);
+            });
+        })
+        .then(function (leads) {
             var promises = _.map(leads, function (lead) {
                 return Snipe.createOrReplace(lead.id, lead);
             });
