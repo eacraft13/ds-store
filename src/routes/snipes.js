@@ -28,6 +28,11 @@ module.exports = function (Snipe) {
                 return ds.ebay.getItems(itemIds);
             })
             .then(function (snipes) {
+                return _.map(snipes, function (snipe) {
+                    return _.omit(snipe, ['profit']);
+                });
+            })
+            .then(function (snipes) {
                 return _.filter(snipes, function (snipe) {
                     return _.includes(snipeIds, snipe.id);
                 });
@@ -62,6 +67,11 @@ module.exports = function (Snipe) {
         return ds
             .ebay
             .getItem(itemId)
+            .then(function (snipes) {
+                return _.map(snipes, function (snipe) {
+                    return _.omit(snipe, ['profit']);
+                });
+            })
             .then(function (snipes) {
                 var promises = _.map(snipes, function (snipe) {
                     return Snipe.createOrReplace(resaleId, snipe);
