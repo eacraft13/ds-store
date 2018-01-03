@@ -33,7 +33,7 @@ router.put('/sync', function (req, res) {
                 return Listing.createOrUpdate(listing);
             });
 
-            return Promise.all(listing);
+            return Promise.all(promises);
         })
         .then(function (results) {
             return res.results(results);
