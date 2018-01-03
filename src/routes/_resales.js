@@ -1,6 +1,6 @@
 'use strict';
 
-var ebay = require('ebay-dev-api')(require('../../private/ebay'));
+var ds      = require('ds-client');
 var express = require('express');
 
 module.exports = function (Resale) {
@@ -26,7 +26,7 @@ module.exports = function (Resale) {
     router.post('/', function (req, res) {
         var resale = req.body;
 
-        resale.id = ebay.shopping.generateId(resale.ebay.shopping);
+        resale.id = ds.ebay.generateId(resale.ebay.shopping);
 
         return Resale
             .createOrUpdate(resale)

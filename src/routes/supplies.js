@@ -1,9 +1,9 @@
 'use strict';
 
 var _       = require('lodash');
+var ds      = require('ds-client');
 var express = require('express');
 var url     = require('url');
-var walmart = require('walmart')(require('../../private/walmart').key);
 
 module.exports = function (Supply) {
     var router = express.Router();
@@ -21,23 +21,17 @@ module.exports = function (Supply) {
      * @add
      */
     router.post('/add', function (req, res) {
-        var id;
+        var itemId;
         var link = url.parse(req.body.link);
         var resaleId = req.resaleId;
 
-        id = _.find(link.pathname.split('/'), function (part) {
+        itemId = _.find(link.pathname.split('/'), function (part) {
             return /^[0-9]{8}$/.test(part);
         });
 
-        return walmart
-            .getItem(id)
-            .then(function (item) {
-                return {
-                    merchant: 'Walmart',
-                    merchantId: item.product.usItemId,
-                    data: item.product
-                };
-            })
+        return ds
+            .merchant
+            .getItem('walmart', itemId)
             .then(function (item) {
                 return Supply.createOrReplace(resaleId, item);
             })
